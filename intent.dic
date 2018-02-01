@@ -1,0 +1,4 @@
+ai.dueros.device_interface.thirdparty.cmcc.smart_gateway Add [D:add][device][type][W:0-2]
+ai.dueros.device_interface.thirdparty.cmcc.smart_gateway Remove [D:remove][device][type][W:0-2]
+ai.dueros.device_interface.thirdparty.cmcc.smart_gateway Bind [D:bind][gateway][W:0-2]
+ai.dueros.device_interface.thirdparty.cmcc.smart_gateway UnBind [D:unbind][gateway][W:0-2]
