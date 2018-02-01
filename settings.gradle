@@ -1,1 +1,1 @@
-include ':app', ':dueroslib', ':duerossimple'
+include ':dueroslib', ':duerossimple'
