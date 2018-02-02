@@ -23,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * BaseDecoder解码实现mp3->pcm
+ * BaseDecoder解码实现mp3 ——》》pcm
  * <p>
  * Created by guxiuzhong@baidu.com on 2017/8/4.
  */

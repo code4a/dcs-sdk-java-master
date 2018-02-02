@@ -4,6 +4,9 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.3"
 
+    lintOptions {
+        abortOnError false
+    }
 
     defaultConfig {
         minSdkVersion 15
@@ -70,4 +73,16 @@ dependencies {
     // compile 'com.squareup.okio:okio:1.13.0'
     compile 'javazoom:jlayer:1.0.1'
     compile files('libs/okio-1.14.0.jar')
+}
+
+apply plugin: 'com.novoda.bintray-release'
+
+//添加
+publish {
+    userOrg = 'code4a'//bintray.com用户名
+    groupId = 'com.code4a'//jcenter上的路径
+    artifactId = 'dueroslib'//项目名称
+    publishVersion = '0.0.1'//版本号
+    desc = 'Dueros library'
+    website = 'https://github.com/code4a/dcs-sdk-java-master'
 }

@@ -18,6 +18,7 @@ package com.code4a.dueroslib.framework.dispatcher;
 
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadBase.FileUploadIOException;
+import org.apache.commons.fileupload.MultipartStream;
 import org.apache.commons.fileupload.ProgressListener;
 import org.apache.commons.fileupload.util.Closeable;
 import org.apache.commons.fileupload.util.Streams;
@@ -270,7 +271,7 @@ public class MultipartStreamCopy {
     /**
      * Creates a new instance.
      *
-     * @deprecated 1.2.1 Use {@link #MultipartStream(InputStream, byte[], int,
+     * @deprecated 1.2.1 Use {@link org.apache.commons.fileupload.MultipartStream #MultipartStream(InputStream, byte[], int,
      * ProgressNotifier)}
      */
     @Deprecated
@@ -291,7 +292,7 @@ public class MultipartStreamCopy {
      * @param boundary The token used for dividing the stream into
      *                 <code>encapsulations</code>.
      * @param bufSize  The size of the buffer to be used, in bytes.
-     * @deprecated 1.2.1 Use {@link #MultipartStream(InputStream, byte[], int,
+     * @deprecated 1.2.1 Use {@link org.apache.commons.fileupload.MultipartStream #MultipartStream(InputStream, byte[], int,
      * ProgressNotifier)}.
      */
     @Deprecated
@@ -356,7 +357,7 @@ public class MultipartStreamCopy {
      * @param boundary  The token used for dividing the stream into
      *                  <code>encapsulations</code>.
      * @param pNotifier An object for calling the progress listener, if any.
-     * @see #MultipartStream(InputStream, byte[], int, ProgressNotifier)
+     * @see org.apache.commons.fileupload.MultipartStream #MultipartStream(InputStream, byte[], int, ProgressNotifier)
      */
     MultipartStreamCopy(InputStream input,
                         byte[] boundary,
@@ -370,7 +371,7 @@ public class MultipartStreamCopy {
      * @param input    The <code>InputStream</code> to serve as a data source.
      * @param boundary The token used for dividing the stream into
      *                 <code>encapsulations</code>.
-     * @deprecated 1.2.1 Use {@link #MultipartStream(InputStream, byte[], int,
+     * @deprecated 1.2.1 Use {@link org.apache.commons.fileupload.MultipartStream #MultipartStream(InputStream, byte[], int,
      * ProgressNotifier)}.
      */
     @Deprecated
@@ -565,7 +566,7 @@ public class MultipartStreamCopy {
      * output <code>Stream</code>.
      * <p>
      * <p>Arbitrary large amounts of data can be processed by this
-     * method using a constant size buffer. (see {@link
+     * method using a constant size buffer. (see {@link org.apache.commons.fileupload.MultipartStream
      * #MultipartStream(InputStream, byte[], int,
      * MultipartStreamCopy.ProgressNotifier) constructor}).
      *

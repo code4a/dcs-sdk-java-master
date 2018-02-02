@@ -37,7 +37,7 @@ import java.util.HashMap;
  * <p>
  * DcsResponseDispatcher用于分发指令到对应的deviceModule进行处理
  * <p>
- * MultiChannelMediaPlayer基于活跃channel策略用于语音输入打断，播放遵循优先级如dialog(voiceOutput) > alerts > mediaPlayer
+ * MultiChannelMediaPlayer基于活跃channel策略用于语音输入打断，播放遵循优先级如dialog(voiceOutput) -》 alerts -》 mediaPlayer
  * <p>
  * 网络层DcsClient负责发送请求、心跳和长连接
  * <p>

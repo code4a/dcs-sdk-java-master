@@ -59,9 +59,9 @@ public class CommonUtil {
     }
 
     /**
-     * 将key1=value1&key2=value2格式的query转换成key-value形式的参数串
+     * 将key1=value1和key2=value2格式的query转换成key-value形式的参数串
      *
-     * @param query key1=value1&key2=value2格式的query
+     * @param query key1=value1和key2=value2格式的query
      * @return key-value形式的bundle
      */
     public static Bundle decodeUrl(String query) {
@@ -83,10 +83,10 @@ public class CommonUtil {
     }
 
     /**
-     * 将key-value形式的参数串，转换成key1=value1&key2=value2格式的query
+     * 将key-value形式的参数串，转换成key1=value1和key2=value2格式的query
      *
      * @param params key-value参数
-     * @return key1=value1&key2=value2格式的query
+     * @return key1=value1和key2=value2格式的query
      */
     public static String encodeUrl(Bundle params) {
         if (params == null || params.isEmpty()) {

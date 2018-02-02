@@ -48,8 +48,8 @@ public abstract class BaseDeviceModule {
     /**
      * 处理服务端下发的指令
      *
-     * @param directive
-     * @throws HandleDirectiveException
+     * @param directive 分发实例
+     * @throws HandleDirectiveException 指令没有处理异常
      */
     public abstract void handleDirective(Directive directive) throws HandleDirectiveException;
 

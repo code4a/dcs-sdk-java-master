@@ -16,7 +16,7 @@ package com.code4a.dueroslib.framework.decoder;
 import java.io.InputStream;
 
 /**
- * MP3->PCM 解码接口
+ * MP3 ——》》PCM 解码接口
  * <p>
  * Created by guxiuzhong@baidu.com on 2017/8/3.
  */

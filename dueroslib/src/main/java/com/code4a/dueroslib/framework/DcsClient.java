@@ -350,7 +350,7 @@ public class DcsClient {
     /**
      * 添加连接状态listener
      *
-     * @param
+     * @param connectionStatusListener 连接状态监听器
      */
     public void addConnectStatusListener(IConnectionStatusListener connectionStatusListener) {
         connectStatusListeners.add(connectionStatusListener);
