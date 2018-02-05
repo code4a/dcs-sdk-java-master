@@ -22,6 +22,7 @@ import com.code4a.dueroslib.devicemodule.audioplayer.message.PlayPayload;
 import com.code4a.dueroslib.devicemodule.audioplayer.message.StopPayload;
 import com.code4a.dueroslib.devicemodule.cmccgateway.message.ControlDevicePayload;
 import com.code4a.dueroslib.devicemodule.cmccgateway.message.ControlGatewayPayload;
+import com.code4a.dueroslib.devicemodule.cmccgateway.message.RenderWorkPayload;
 import com.code4a.dueroslib.devicemodule.screen.message.HtmlPayload;
 import com.code4a.dueroslib.devicemodule.screen.message.RenderVoiceInputTextPayload;
 import com.code4a.dueroslib.devicemodule.speakcontroller.message.AdjustVolumePayload;
@@ -118,6 +119,8 @@ public class PayloadConfig {
         insertPayload(namespace, name, ControlGatewayPayload.class);
         name = com.code4a.dueroslib.devicemodule.cmccgateway.ApiConstants.Directives.UnBind.NAME;
         insertPayload(namespace, name, ControlGatewayPayload.class);
+        name = com.code4a.dueroslib.devicemodule.cmccgateway.ApiConstants.Directives.Render.NAME;
+        insertPayload(namespace, name, RenderWorkPayload.class);
     }
 
     void insertPayload(String namespace, String name, Class<?> type) {

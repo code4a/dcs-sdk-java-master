@@ -2,6 +2,7 @@ package com.code4a.dueroslib.oauth.api;
 
 import com.code4a.dueroslib.http.DcsHttpManager;
 import com.code4a.dueroslib.http.callback.DcsCallback;
+import com.code4a.dueroslib.http.callback.DirectCallback;
 
 import java.util.Map;
 
@@ -20,9 +21,9 @@ public class OauthRequest {
      *
      * @param url         授权地址
      * @param params      get请求参数
-     * @param dcsCallback 请求结果回调
+     * @param directCallback 请求结果回调
      */
-    public static void oauthClientCredentials(String url, Map<String, String> params, DcsCallback dcsCallback) {
+    public static void oauthClientCredentials(String url, Map<String, String> params, DirectCallback<OauthClientCredentialsInfo> directCallback) {
         DcsHttpManager.post()
                 .url(url)
                 .tag(AUTH_CLIENT_CREDENTIALS_TAG)
@@ -30,7 +31,7 @@ public class OauthRequest {
                 .build()
                 .connTimeOut(DEFAULT_MILLISECONDS)
                 .readTimeOut(DEFAULT_MILLISECONDS)
-                .execute(dcsCallback);
+                .execute(OauthClientCredentialsInfo.class, directCallback);
     }
 
     public interface OauthCallback<T> extends BaiduOauthListener{

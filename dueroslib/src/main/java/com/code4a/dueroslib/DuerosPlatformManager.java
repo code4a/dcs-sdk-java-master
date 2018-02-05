@@ -25,39 +25,41 @@ public final class DuerosPlatformManager {
     }
 
     public static void addWakeUpSuccessCallback(WakeUpSuccessCallback wakeUpSuccessCallback) {
-        iDuerosPlatform.setWakeUpSuccessCallback(wakeUpSuccessCallback);
+        if (iDuerosPlatform != null)
+            iDuerosPlatform.setWakeUpSuccessCallback(wakeUpSuccessCallback);
     }
 
     public static void addOnRecordingListener(DuerosConfig.OnRecordingListener listener) {
-        iDuerosPlatform.addOnRecordingListener(listener);
+        if (iDuerosPlatform != null) iDuerosPlatform.addOnRecordingListener(listener);
     }
 
-    public static void addDuerosCustomTaskCallback(DuerosCustomTaskCallback duerosCustomTaskCallback){
-        iDuerosPlatform.addDuerosCustomTaskCallback(duerosCustomTaskCallback);
+    public static void addDuerosCustomTaskCallback(DuerosCustomTaskCallback duerosCustomTaskCallback) {
+        if (iDuerosPlatform != null)
+            iDuerosPlatform.addDuerosCustomTaskCallback(duerosCustomTaskCallback);
     }
 
     public static void setWebView(BaseWebView webView) {
-        iDuerosPlatform.setWebView(webView);
+        if (iDuerosPlatform != null) iDuerosPlatform.setWebView(webView);
     }
 
 
     public static void startWakeUp() {
-        iDuerosPlatform.startWakeUp();
+        if (iDuerosPlatform != null) iDuerosPlatform.startWakeUp();
     }
 
     public static void stopWakeUp() {
-        iDuerosPlatform.stopWakeUp();
+        if (iDuerosPlatform != null) iDuerosPlatform.stopWakeUp();
     }
 
     public static void uninitDcsFramework() {
-        iDuerosPlatform.uninitDcsFramework();
+        if (iDuerosPlatform != null) iDuerosPlatform.uninitDcsFramework();
     }
 
     public static void changeRecording() {
-        iDuerosPlatform.changeRecording();
+        if (iDuerosPlatform != null) iDuerosPlatform.changeRecording();
     }
 
     public static IWebView getWebView() {
-        return iDuerosPlatform.getWebView();
+        return iDuerosPlatform == null ? null : iDuerosPlatform.getWebView();
     }
 }

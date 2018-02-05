@@ -28,14 +28,10 @@ import android.webkit.CookieSyncManager;
 
 import com.baidu.dcs.okhttp3.Call;
 import com.baidu.dcs.okhttp3.Request;
-import com.baidu.dcs.okhttp3.Response;
-import com.code4a.dueroslib.http.callback.DcsCallback;
-import com.code4a.dueroslib.http.callback.ResponseCallback;
+import com.code4a.dueroslib.http.callback.DirectCallback;
 import com.code4a.dueroslib.util.CommonUtil;
 import com.code4a.dueroslib.util.LogUtil;
-import com.code4a.dueroslib.util.ObjectMapperUtil;
 
-import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -111,8 +107,8 @@ public class BaiduOauthClientCredentials implements Parcelable, BaiduOauth {
      * @param configs
      */
     @Override
-    public void authorize(Application activity, BaiduOauthListener listener, boolean ...configs) {
-        this.authorize(activity, null, (OauthRequest.OauthCallback<OauthClientCredentialsInfo>)listener);
+    public void authorize(Application activity, BaiduOauthListener listener, boolean... configs) {
+        this.authorize(activity, null, (OauthRequest.OauthCallback<OauthClientCredentialsInfo>) listener);
     }
 
     /**
@@ -131,7 +127,7 @@ public class BaiduOauthClientCredentials implements Parcelable, BaiduOauth {
         // 使用匿名的BaiduDialogListener对listener进行了包装，并进行一些存储token信息和当前登录用户的逻辑，
         // 外部传进来的listener信息不需要在进行存储相关的逻辑
         this.authorize(activity, permissions,
-                new ResponseCallback() {
+                new DirectCallback<OauthClientCredentialsInfo>() {
 
                     @Override
                     public void onBefore(Request request, int id) {
@@ -139,37 +135,15 @@ public class BaiduOauthClientCredentials implements Parcelable, BaiduOauth {
                     }
 
                     @Override
-                    public Response parseNetworkResponse(Response response, int id) throws Exception {
-                        if (super.validateResponse(response, id)) {
-                            try {
-                                String json = response.body().string();
-                                Log.e("parseNetworkResponse", json);
-                                OauthClientCredentialsInfo info = ObjectMapperUtil.instance().getObjectReader(OauthClientCredentialsInfo.class).readValue(json);
-                                // 存储相应的token信息
-                                if(info == null){
-                                    throw new RuntimeException("Token信息解析失败！");
-                                }
-                                Log.e("parseInfo", info.toString());
-                                getAccessTokenManager().storeToken(info);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        return super.parseNetworkResponse(response, id);
+                    public void onFailure(int id, Call call, String msg) {
+                        listener.onFailure(msg);
                     }
 
                     @Override
-                    public void onError(Call call, Exception e, int id) {
-                        listener.onFailure(e.getMessage());
-                    }
-
-                    @Override
-                    public void onResponse(Response response, int id) {
-                        if (validateResponse(response, id)) {
-                            listener.onSuccess(null);
-                        } else {
-                            listener.onFailure(response.toString());
-                        }
+                    public void onSuccess(OauthClientCredentialsInfo info, int id) {
+                        Log.e("parseInfo", info.toString());
+                        getAccessTokenManager().storeToken(info);
+                        listener.onSuccess(info);
                     }
 
                     @Override
@@ -182,12 +156,12 @@ public class BaiduOauthClientCredentials implements Parcelable, BaiduOauth {
     /**
      * 通过Client Credentials授权 获取access token
      *
-     * @param application    用来校验权限的activity
+     * @param application 用来校验权限的activity
      * @param permissions 需要请求的环境
      * @param dcsCallback 结果回调接口
      * @param grantType   授权请求的类型
      */
-    private void authorize(Application application, String[] permissions, final DcsCallback dcsCallback, String grantType) {
+    private void authorize(Application application, String[] permissions, final DirectCallback<OauthClientCredentialsInfo> dcsCallback, String grantType) {
         CookieSyncManager.createInstance(application);
         Map<String, String> params = new LinkedHashMap<>();
         params.put("client_id", this.cliendId);

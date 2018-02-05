@@ -20,6 +20,7 @@ import com.baidu.dcs.okhttp3.OkHttpClient;
 import com.baidu.dcs.okhttp3.Request;
 import com.code4a.dueroslib.http.DcsHttpManager;
 import com.code4a.dueroslib.http.callback.DcsCallback;
+import com.code4a.dueroslib.http.callback.DirectCallback;
 
 import java.util.concurrent.TimeUnit;
 
@@ -86,6 +87,17 @@ public class RequestCall {
 
     private Request generateRequest(DcsCallback dcsCallback) {
         return okHttpRequest.generateRequest(dcsCallback);
+    }
+
+    public <T> void execute(Class<T> clazz, DirectCallback<T> directCallback) {
+        buildCall(null);
+        if (directCallback != null) {
+            directCallback.onBefore(request, getOkHttpRequest().getId());
+        }
+        DcsHttpManager.getInstance().execute(this, clazz, directCallback);
+        if (directCallback != null) {
+            directCallback.onAfter(getOkHttpRequest().getId());
+        }
     }
 
     public void execute(DcsCallback dcsCallback) {

@@ -1,6 +1,9 @@
 package com.code4a.dueroslib;
 
+import android.Manifest;
 import android.app.Application;
+import android.content.pm.PackageManager;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.widget.Toast;
 
@@ -99,12 +102,18 @@ public final class DuerosConfig {
         }
     }
 
+    private boolean holdRelatedPermission() {
+        int permissionCheck = ContextCompat.checkSelfPermission(application, Manifest.permission.RECORD_AUDIO);
+        return permissionCheck == PackageManager.PERMISSION_GRANTED;
+    }
+
     protected void initDcsFramework() {
         if (baiduOauth == null || !baiduOauth.isSessionValid()) {
             throw new TokenInvalidException();
         } else {
             HttpConfig.setAccessToken(baiduOauth.getAccessToken());
         }
+        if (!holdRelatedPermission()) throw new SecurityException("请授予App录音的权限！");
         platformFactory = new PlatformFactoryImpl(application);
         dcsFramework = new DcsFramework(platformFactory);
         deviceModuleFactory = dcsFramework.getDeviceModuleFactory();
@@ -182,21 +191,21 @@ public final class DuerosConfig {
     }
 
     public void startWakeUp() {
-        wakeUp.startWakeUp();
+        if (wakeUp != null) wakeUp.startWakeUp();
     }
 
     public void stopWakeUp() {
-        wakeUp.stopWakeUp();
+        if (wakeUp != null) wakeUp.stopWakeUp();
     }
 
     public void startRecording() {
-        wakeUp.stopWakeUp();
+        if (wakeUp != null) wakeUp.stopWakeUp();
         isStopListenReceiving = true;
         doUserActivity();
     }
 
     public void stopRecording() {
-        wakeUp.startWakeUp();
+        if (wakeUp != null) wakeUp.startWakeUp();
         isStopListenReceiving = false;
         long t = System.currentTimeMillis() - startTimeStopListen;
         LogUtil.e(DuerosConfig.class, String.format("耗时:click->StopListen:%dms", t));
@@ -246,12 +255,14 @@ public final class DuerosConfig {
     };
 
     protected void uninitFramework() {
-        // 先remove listener  停止唤醒,释放资源
-        wakeUp.removeWakeUpListener(wakeUpListener);
-        this.wakeUpSuccessCallback = null;
-        wakeUp.stopWakeUp();
-        wakeUp.releaseWakeUp();
-        wakeUp = null;
+        if (wakeUp != null) {
+            // 先remove listener  停止唤醒,释放资源
+            wakeUp.removeWakeUpListener(wakeUpListener);
+            this.wakeUpSuccessCallback = null;
+            wakeUp.stopWakeUp();
+            wakeUp.releaseWakeUp();
+            wakeUp = null;
+        }
 
         if (dcsFramework != null) {
             dcsFramework.release();
@@ -263,8 +274,10 @@ public final class DuerosConfig {
             webView.removeAllViews();
             webView.destroy();
         }
-        recordingListeners.clear();
-        recordingListeners = null;
+        if (recordingListeners != null) {
+            recordingListeners.clear();
+            recordingListeners = null;
+        }
     }
 
     public IWebView getWebView() {

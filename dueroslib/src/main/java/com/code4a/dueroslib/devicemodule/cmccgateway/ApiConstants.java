@@ -44,5 +44,9 @@ public class ApiConstants {
         public static final class UnBind {
             public static final String NAME = UnBind.class.getSimpleName();
         }
+
+        public static final class Render {
+            public static final String NAME = Render.class.getSimpleName();
+        }
     }
 }

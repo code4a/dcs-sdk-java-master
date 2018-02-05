@@ -15,6 +15,8 @@
  */
 package com.code4a.dueroslib.http;
 
+import android.util.Log;
+
 import com.baidu.dcs.okhttp3.Call;
 import com.baidu.dcs.okhttp3.Callback;
 import com.baidu.dcs.okhttp3.OkHttpClient;
@@ -23,9 +25,11 @@ import com.code4a.dueroslib.http.builder.GetBuilder;
 import com.code4a.dueroslib.http.builder.PostMultipartBuilder;
 import com.code4a.dueroslib.http.builder.PostStringBuilder;
 import com.code4a.dueroslib.http.callback.DcsCallback;
+import com.code4a.dueroslib.http.callback.DirectCallback;
 import com.code4a.dueroslib.http.intercepter.LoggingInterceptor;
 import com.code4a.dueroslib.http.request.RequestCall;
 import com.code4a.dueroslib.http.utils.Platform;
+import com.code4a.dueroslib.util.ObjectMapperUtil;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -123,6 +127,72 @@ public class DcsHttpManager {
                     Object o = finalDCSCallback.parseNetworkResponse(response, id);
                 } catch (Exception e) {
                     sendFailResultCallback(call, e, finalDCSCallback, id);
+                } finally {
+                    if (response.body() != null) {
+                        response.body().close();
+                    }
+                }
+            }
+        });
+    }
+
+    public <T> void execute(RequestCall requestCall, final Class<T> clazz, final DirectCallback<T> directCallback) {
+
+        final int id = requestCall.getOkHttpRequest().getId();
+        requestCall.getCall().enqueue(new Callback() {
+            @Override
+            public void onFailure(final Call call, final IOException e) {
+                if(directCallback == null) return;
+                mPlatform.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        directCallback.onFailure(id, call, e.getMessage());
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(final Call call, final Response response) {
+                try {
+                    if (call.isCanceled()) {
+                        if(directCallback == null) return;
+                        mPlatform.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                directCallback.onFailure(id, call, "Canceled!");
+                            }
+                        });
+                        return;
+                    }
+                    if (!response.isSuccessful()) {
+                        if(directCallback == null) return;
+                        mPlatform.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                IOException exception = new IOException("request failed , response's code is : " + response.code());
+                                directCallback.onFailure(id, call, exception.getMessage());
+                            }
+                        });
+                        return;
+                    }
+                    String json = response.body().string();
+                    Log.e("parseNetworkResponse", json);
+                    final T t = ObjectMapperUtil.instance().getObjectReader(clazz).readValue(json);
+                    if(directCallback == null) return;
+                    mPlatform.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            directCallback.onSuccess(t, id);
+                        }
+                    });
+                } catch (final Exception e) {
+                    if(directCallback == null) return;
+                    mPlatform.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            directCallback.onFailure(id, call, e.getMessage());
+                        }
+                    });
                 } finally {
                     if (response.body() != null) {
                         response.body().close();

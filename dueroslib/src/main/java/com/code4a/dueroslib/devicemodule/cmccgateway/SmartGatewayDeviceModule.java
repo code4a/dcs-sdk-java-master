@@ -2,6 +2,7 @@ package com.code4a.dueroslib.devicemodule.cmccgateway;
 
 import com.code4a.dueroslib.devicemodule.cmccgateway.message.ControlDevicePayload;
 import com.code4a.dueroslib.devicemodule.cmccgateway.message.ControlGatewayPayload;
+import com.code4a.dueroslib.devicemodule.cmccgateway.message.RenderWorkPayload;
 import com.code4a.dueroslib.devicemodule.system.HandleDirectiveException;
 import com.code4a.dueroslib.framework.BaseDeviceModule;
 import com.code4a.dueroslib.framework.IMessageSender;
@@ -24,7 +25,7 @@ public class SmartGatewayDeviceModule extends BaseDeviceModule {
     private final List<ControlDeviceListener> listeners;
 
     public enum Command {
-        ADD, REMOVE, BIND, UNBIND
+        ADD, REMOVE, BIND, UNBIND, RENDER
     }
 
     public SmartGatewayDeviceModule(IMessageSender messageSender) {
@@ -48,10 +49,20 @@ public class SmartGatewayDeviceModule extends BaseDeviceModule {
             bindGateway(directive.getPayload());
         } else if (name.equals(ApiConstants.Directives.UnBind.NAME)) {
             unbindGateway(directive.getPayload());
+        } else if (name.equals(ApiConstants.Directives.Render.NAME)) {
+            renderHomeWork(directive.getPayload());
         } else {
             String message = "SmartGateway cannot handle the directive";
             throw (new HandleDirectiveException(
                     HandleDirectiveException.ExceptionType.UNSUPPORTED_OPERATION, message));
+        }
+    }
+
+    private void renderHomeWork(Payload payload) {
+        if (payload instanceof RenderWorkPayload) {
+            controlDevice(Command.RENDER, ((RenderWorkPayload) payload).getWork(), null);
+        } else {
+            LogUtil.e(TAG, "payload class : " + payload.getClass().getSimpleName());
         }
     }
 
