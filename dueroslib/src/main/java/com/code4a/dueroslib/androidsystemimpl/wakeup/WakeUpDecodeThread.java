@@ -54,7 +54,7 @@ public class WakeUpDecodeThread extends Thread {
      * 开始唤醒
      */
     public synchronized void startWakeUp() {
-        if (isStart) {
+        if (isStart || isRelease) {
             return;
         }
         isStart = true;
