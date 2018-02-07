@@ -53,12 +53,14 @@ public class WakeUpImpl implements IWakeUp {
     // 初始化唤醒词的返回值
     private int wakeUpInitialRet;
     private Context context;
+    private boolean isRelease = false;
 
     public WakeUpImpl(Context context, LinkedBlockingDeque<byte[]> linkedBlockingDeque) {
         this.linkedBlockingDeque = linkedBlockingDeque;
         this.context = context.getApplicationContext();
         this.wakeUpNative = new WakeUpNative();
         this.wakeUpListeners = Collections.synchronizedList(new LinkedList<IWakeUpListener>());
+        this.isRelease = false;
         this.initWakeUp();
     }
 
@@ -77,6 +79,10 @@ public class WakeUpImpl implements IWakeUp {
 
     @Override
     public void startWakeUp() {
+        if (isRelease) {
+            LogUtil.e(TAG, "wakeup is release");
+            return;
+        }
         if (wakeUpDecodeThread != null && wakeUpDecodeThread.isStart()) {
             LogUtil.d(TAG, "wakeup wakeUpDecodeThread  is Started !");
             return;
@@ -104,6 +110,7 @@ public class WakeUpImpl implements IWakeUp {
             wakeUpDecodeThread.release();
             wakeUpDecodeThread = null;
         }
+        this.isRelease = true;
         int ret = wakeUpNative.wakeUpFree();
         LogUtil.d(TAG, "wakeUpFree-ret:" + ret);
     }

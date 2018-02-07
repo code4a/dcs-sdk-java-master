@@ -39,7 +39,7 @@ public class WakeUpDecodeThread extends Thread {
     private Handler handler;
     private volatile boolean isStart = false;
     private LinkedBlockingDeque<byte[]> linkedBlockingDeque;
-    private boolean isRelease = false;
+    private volatile boolean isRelease = false;
 
     public WakeUpDecodeThread(LinkedBlockingDeque<byte[]> linkedBlockingDeque,
                               WakeUpNative wakeUpNative,
