@@ -100,6 +100,10 @@ public class WakeUpImpl implements IWakeUp {
     @Override
     public void releaseWakeUp() {
         // 3.释放资源
+        if (wakeUpDecodeThread != null) {
+            wakeUpDecodeThread.release();
+            wakeUpDecodeThread = null;
+        }
         int ret = wakeUpNative.wakeUpFree();
         LogUtil.d(TAG, "wakeUpFree-ret:" + ret);
     }

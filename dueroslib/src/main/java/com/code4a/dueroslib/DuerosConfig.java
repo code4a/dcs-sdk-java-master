@@ -3,6 +3,7 @@ package com.code4a.dueroslib;
 import android.Manifest;
 import android.app.Application;
 import android.content.pm.PackageManager;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.widget.Toast;
@@ -62,6 +63,7 @@ public final class DuerosConfig {
     private WakeUpSuccessCallback wakeUpSuccessCallback;
     private boolean isStopListenReceiving;
     private long startTimeStopListen;
+    private boolean isInitFramework = false;
 
     List<OnRecordingListener> recordingListeners;
 
@@ -160,18 +162,28 @@ public final class DuerosConfig {
         wakeUp.addWakeUpListener(wakeUpListener);
         // 开始录音，监听是否说了唤醒词
         wakeUp.startWakeUp();
+        isInitFramework = true;
     }
 
     private void createScreenDeviceModule() {
-        getDeviceModuleFactory().createScreenDeviceModule();
-        getDeviceModuleFactory().getScreenDeviceModule()
-                .addRenderVoiceInputTextListener(new ScreenDeviceModule.IRenderVoiceInputTextListener() {
-                    @Override
-                    public void onRenderVoiceInputText(RenderVoiceInputTextPayload payload) {
-                        notifyOnRecording(payload.text);
-                    }
+        if (isInitFramework) {
+            getDeviceModuleFactory().createScreenDeviceModule();
+            getDeviceModuleFactory().getScreenDeviceModule()
+                    .addRenderVoiceInputTextListener(new ScreenDeviceModule.IRenderVoiceInputTextListener() {
+                        @Override
+                        public void onRenderVoiceInputText(RenderVoiceInputTextPayload payload) {
+                            notifyOnRecording(payload.text);
+                        }
 
-                });
+                    });
+        } /*else {
+            new Handler(application.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    createScreenDeviceModule();
+                }
+            }, 500);
+        }*/
     }
 
     void showShortToast(String text) {
@@ -278,6 +290,7 @@ public final class DuerosConfig {
             recordingListeners.clear();
             recordingListeners = null;
         }
+        isInitFramework = false;
     }
 
     public IWebView getWebView() {
@@ -285,7 +298,16 @@ public final class DuerosConfig {
     }
 
     public void addOnRecordingListener(OnRecordingListener listener) {
-        recordingListeners.add(listener);
+        if (recordingListeners != null) {
+            recordingListeners.add(listener);
+        } /*else {
+            new Handler(application.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            }, 200);
+        }*/
     }
 
     void notifyRecording(boolean isStart) {

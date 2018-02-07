@@ -82,7 +82,7 @@ publish {
     userOrg = 'code4a'//bintray.com用户名
     groupId = 'com.code4a'//jcenter上的路径
     artifactId = 'dueroslib'//项目名称
-    publishVersion = '0.0.1'//版本号
+    publishVersion = '0.0.2'//版本号
     desc = 'Dueros library'
     website = 'https://github.com/code4a/dcs-sdk-java-master'
 }

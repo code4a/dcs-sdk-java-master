@@ -17,6 +17,7 @@
 package com.code4a.dueroslib.androidsystemimpl.wakeup;
 
 import android.os.Handler;
+import android.os.SystemClock;
 
 import com.code4a.dueroslib.util.LogUtil;
 
@@ -38,6 +39,7 @@ public class WakeUpDecodeThread extends Thread {
     private Handler handler;
     private volatile boolean isStart = false;
     private LinkedBlockingDeque<byte[]> linkedBlockingDeque;
+    private boolean isRelease = false;
 
     public WakeUpDecodeThread(LinkedBlockingDeque<byte[]> linkedBlockingDeque,
                               WakeUpNative wakeUpNative,
@@ -45,12 +47,13 @@ public class WakeUpDecodeThread extends Thread {
         this.linkedBlockingDeque = linkedBlockingDeque;
         this.wakeUpNative = wakeUpNative;
         this.handler = handler;
+        isRelease = false;
     }
 
     /**
      * 开始唤醒
      */
-    public void startWakeUp() {
+    public synchronized void startWakeUp() {
         if (isStart) {
             return;
         }
@@ -58,58 +61,25 @@ public class WakeUpDecodeThread extends Thread {
         this.start();
     }
 
-    public boolean isStart() {
+    public synchronized boolean isStart() {
         return isStart;
     }
 
     /**
      * 停止唤醒
      */
-    public void stopWakeUp() {
+    public synchronized void stopWakeUp() {
         isStart = false;
     }
 
     @Override
     public void run() {
         super.run();
-        LogUtil.i(TAG, "wakeup wakeUpDecode start" );
+        LogUtil.i(TAG, "wakeup wakeUpDecode start");
         while (isStart) {
-            try {
-                byte[] data = linkedBlockingDeque.take();
-
-                // 暂时不检测vad
-                // int volume = calculateVolume(data, 16);
-                // LogUtil.i(TAG, "wakeup audioRecord Volume:" + volume);
-                // if (volume <= 0) {
-                //  continue;
-                // }
-
-                if (data.length > 0) {
-                    // 是否为最后一帧数据
-                    boolean isEnd = false;
-                    short[] arr = byteArray2ShortArray(data, data.length / 2);
-                    int ret = wakeUpNative.wakeUpDecode(
-                            arr,
-                            arr.length,
-                            "",
-                            1,
-                            -1,
-                            true,
-                            voiceOffset++,
-                            isEnd
-                    );
-                    // 唤醒成功
-                    if (ret == WAKEUP_SUCCEED) {
-                        LogUtil.i(TAG, "wakeup wakeUpDecode ret:" + ret);
-                        isWakeUp = true;
-                        stopWakeUp();
-                        LogUtil.i(TAG, "wakeup wakeUpDecode succeed !!");
-                        break;
-                    }
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            if (isRelease) return;
+            if (wakeUpDecode()) break;
+            //            SystemClock.sleep(500);
         }
         LogUtil.i(TAG, "wakeup after wakeUpDecode over !!");
         LogUtil.i(TAG, "wakeup after linkedBlockingDeque size:" + linkedBlockingDeque.size());
@@ -127,6 +97,46 @@ public class WakeUpDecodeThread extends Thread {
         // 重置
         voiceOffset = 0;
         isWakeUp = false;
+    }
+
+    private synchronized boolean wakeUpDecode() {
+        try {
+            byte[] data = linkedBlockingDeque.take();
+
+            // 暂时不检测vad
+            // int volume = calculateVolume(data, 16);
+            // LogUtil.i(TAG, "wakeup audioRecord Volume:" + volume);
+            // if (volume <= 0) {
+            //  continue;
+            // }
+
+            if (data.length > 0) {
+                // 是否为最后一帧数据
+                boolean isEnd = false;
+                short[] arr = byteArray2ShortArray(data, data.length / 2);
+                int ret = wakeUpNative.wakeUpDecode(
+                        arr,
+                        arr.length,
+                        "",
+                        1,
+                        -1,
+                        true,
+                        voiceOffset++,
+                        isEnd
+                );
+                // 唤醒成功
+                if (ret == WAKEUP_SUCCEED) {
+                    LogUtil.i(TAG, "wakeup wakeUpDecode ret:" + ret);
+                    isWakeUp = true;
+                    stopWakeUp();
+                    LogUtil.i(TAG, "wakeup wakeUpDecode succeed !!");
+                    return true;
+                }
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     /**
@@ -211,6 +221,10 @@ public class WakeUpDecodeThread extends Thread {
 
     public void setWakeUpListener(IWakeUpListener listener) {
         this.listener = listener;
+    }
+
+    public synchronized void release() {
+        isRelease = true;
     }
 
     /**

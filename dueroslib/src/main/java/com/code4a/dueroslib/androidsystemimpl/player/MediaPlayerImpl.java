@@ -245,7 +245,10 @@ public class MediaPlayerImpl implements IMediaPlayer {
     @Override
     public void release() {
         if (mMediaPlayer != null) {
-            mMediaPlayer.stop();
+            if(mMediaPlayer.isPlaying()){
+                mMediaPlayer.stop();
+            }
+            mMediaPlayer.reset();
             mMediaPlayer.release();
             mMediaPlayer = null;
             mCurrentState = IMediaPlayer.PlayState.IDLE;
