@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.dcs_sample_activity_main);
         initView();
         setListeners();
+//        ((SimpleApp)getApplication()).init();
     }
 
     @Override

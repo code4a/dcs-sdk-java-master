@@ -53,7 +53,7 @@ public class WakeUpDecodeThread extends Thread {
     /**
      * 开始唤醒
      */
-    public synchronized void startWakeUp() {
+    public void startWakeUp() {
         if (isStart || isRelease) {
             return;
         }
@@ -61,14 +61,14 @@ public class WakeUpDecodeThread extends Thread {
         this.start();
     }
 
-    public synchronized boolean isStart() {
+    public boolean isStart() {
         return isStart;
     }
 
     /**
      * 停止唤醒
      */
-    public synchronized void stopWakeUp() {
+    public void stopWakeUp() {
         isStart = false;
     }
 
@@ -223,7 +223,7 @@ public class WakeUpDecodeThread extends Thread {
         this.listener = listener;
     }
 
-    public synchronized void release() {
+    public void release() {
         isRelease = true;
     }
 

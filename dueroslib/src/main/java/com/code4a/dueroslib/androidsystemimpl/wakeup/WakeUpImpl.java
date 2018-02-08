@@ -78,7 +78,7 @@ public class WakeUpImpl implements IWakeUp {
     }
 
     @Override
-    public void startWakeUp() {
+    public synchronized void startWakeUp() {
         if (isRelease) {
             LogUtil.e(TAG, "wakeup is release");
             return;
@@ -96,7 +96,7 @@ public class WakeUpImpl implements IWakeUp {
     }
 
     @Override
-    public void stopWakeUp() {
+    public synchronized void stopWakeUp() {
         if (wakeUpDecodeThread != null) {
             wakeUpDecodeThread.stopWakeUp();
         }
@@ -104,9 +104,10 @@ public class WakeUpImpl implements IWakeUp {
     }
 
     @Override
-    public void releaseWakeUp() {
+    public synchronized void releaseWakeUp() {
         // 3.释放资源
         if (wakeUpDecodeThread != null) {
+            wakeUpDecodeThread.stopWakeUp();
             wakeUpDecodeThread.release();
             wakeUpDecodeThread = null;
         }

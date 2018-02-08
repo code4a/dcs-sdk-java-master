@@ -14,6 +14,10 @@ public class SimpleApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        init();
+    }
+
+    public void init() {
         DuerosGatewayManager duerosGatewayManager = DuerosPlatformManager.createDuerosGatewayManager(this, "dL33GvH6W91LVSirqu8BoR9KzyUefZDl", "LRW0tO85FNBWyyh19roOXIktND2IX97f");
         DuerosPlatformManager.initDuerosPlatformManager(duerosGatewayManager);
     }
