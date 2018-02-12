@@ -24,6 +24,7 @@ public interface IPlatformFactory {
     IHandler createHandler();
     IHandler getMainHandler();
     IAudioRecord getAudioRecord();
+    void resetAudioRecord();
     IWakeUp getWakeUp();
     IAudioInput getVoiceInput();
     IMediaPlayer createMediaPlayer();

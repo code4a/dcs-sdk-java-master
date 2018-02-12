@@ -15,35 +15,26 @@ public final class DuerosGatewayManager extends IDuerosPlatform {
 
     static final String TAG = DuerosGatewayManager.class.getSimpleName();
 
-    GatewayControlListener gatewayControlListener;
-
     protected DuerosGatewayManager(Application application, String clientId, String clientSecert) {
         super(application, clientId, clientSecert);
     }
 
     @Override
-    public void createCustomDeviceModules() {
-        duerosConfig.getDeviceModuleFactory().createSmartGatewayDeviceModule();
-        duerosConfig.getDeviceModuleFactory().getSmartGatewayDeviceModule()
-                .addControlDeviceListener(new SmartGatewayDeviceModule.ControlDeviceListener() {
-                    @Override
-                    public void controlDevice(SmartGatewayDeviceModule.Command command, String deviceName, String type) {
-                        LogUtil.e(TAG, "controlDevice : " + deviceName + type);
-                        if (gatewayControlListener != null)
-                            gatewayControlListener.controlDevice(command, deviceName, type);
-                    }
-                });
+    public <T extends DuerosCustomTaskCallback> void addDuerosCustomTaskCallback(T customTaskCallback) {
+        duerosConfig.addDuerosCustomTaskCallback(customTaskCallback);
     }
 
     @Override
-    public void oauthDuerosPlatform(final boolean isInitFramework) {
+    public void createCustomDeviceModules() {
+        duerosConfig.createGatewayDeviceModule();
+    }
+
+    @Override
+    public void oauthDuerosPlatform() {
         duerosConfig.clientCredentialsOauth(new OauthRequest.OauthCallback<OauthClientCredentialsInfo>() {
             @Override
             public void onSuccess(OauthClientCredentialsInfo info) {
                 LogUtil.w(TAG, "client credentials success");
-                if (isInitFramework) {
-                    initDcsFramework();
-                }
             }
 
             @Override
@@ -62,11 +53,6 @@ public final class DuerosGatewayManager extends IDuerosPlatform {
                 LogUtil.w(TAG, "client credentials end");
             }
         });
-    }
-
-    @Override
-    public void addDuerosCustomTaskCallback(DuerosCustomTaskCallback gatewayControlListener) {
-        this.gatewayControlListener = (GatewayControlListener) gatewayControlListener;
     }
 
     public interface GatewayControlListener extends DuerosCustomTaskCallback {

@@ -58,14 +58,11 @@ public final class DuerosAudioPlayerManager extends IDuerosPlatform {
     }
 
     @Override
-    public void oauthDuerosPlatform(final boolean isInitFramework) {
+    public void oauthDuerosPlatform() {
         duerosConfig.clientCredentialsOauth(new OauthRequest.OauthCallback<OauthClientCredentialsInfo>() {
             @Override
             public void onSuccess(OauthClientCredentialsInfo info) {
                 LogUtil.w(TAG, "client credentials success");
-                if (isInitFramework) {
-                    initDcsFramework();
-                }
             }
 
             @Override

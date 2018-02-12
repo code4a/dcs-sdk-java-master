@@ -34,7 +34,6 @@ public class WakeUp {
 
     public WakeUp(IWakeUp iWakeUp, IAudioRecord iAudioRecord) {
         this.iWakeUp = iWakeUp;
-        this.iAudioRecord = iAudioRecord;
         this.wakeUpListeners = Collections.synchronizedList(new LinkedList<IWakeUp.IWakeUpListener>());
         this.iWakeUp.addWakeUpListener(new IWakeUp.IWakeUpListener() {
             @Override
@@ -43,13 +42,22 @@ public class WakeUp {
             }
         });
         // 启动音频采集
-        this.iAudioRecord.startRecord();
+        startIAudioRecord(iAudioRecord);
     }
 
     private void fireOnWakeUpSucceed() {
         for (IWakeUp.IWakeUpListener listener : wakeUpListeners) {
             listener.onWakeUpSucceed();
         }
+    }
+
+    public void startIAudioRecord(IAudioRecord iAudioRecord) {
+        this.iAudioRecord = iAudioRecord;
+        this.iAudioRecord.startRecord();
+    }
+
+    public void stopIAudioRecord(){
+        this.iAudioRecord.stopRecord();
     }
 
     /**
@@ -70,8 +78,8 @@ public class WakeUp {
      * 释放资源-解码so库资源
      */
     public void releaseWakeUp() {
-        iAudioRecord.stopRecord();
         iWakeUp.releaseWakeUp();
+        stopIAudioRecord();
     }
 
     /**

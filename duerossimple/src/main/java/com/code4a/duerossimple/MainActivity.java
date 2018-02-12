@@ -21,12 +21,13 @@ import com.code4a.dueroslib.androidsystemimpl.webview.BaseWebView;
 import com.code4a.dueroslib.http.HttpConfig;
 import com.code4a.dueroslib.util.CommonUtil;
 import com.code4a.dueroslib.util.FileUtil;
+import com.code4a.dueroslib.util.LogUtil;
 import com.code4a.dueroslib.util.NetWorkUtil;
 import com.code4a.dueroslib.wakeup.WakeUpSuccessCallback;
 
 import java.io.File;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Button voiceButton;
     private TextView textViewTimeStopListen;
@@ -42,7 +43,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.dcs_sample_activity_main);
         initView();
         setListeners();
-//        ((SimpleApp)getApplication()).init();
     }
 
     @Override
@@ -117,7 +117,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         mTopLinearLayout.addView(webView);
-        DuerosPlatformManager.setWebView(webView);
+        if (DuerosPlatformManager.initDcsFramework()) {
+            DuerosPlatformManager.setWebView(webView);
+        }
 
         Button mPreviousSongBtn = (Button) findViewById(R.id.previousSongBtn);
         pauseOrPlayButton = (Button) findViewById(R.id.pauseOrPlayBtn);
@@ -137,13 +139,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 openAssignFolder(FileUtil.getLogFilePath());
                 break;
             case R.id.previousSongBtn:
-
+                DuerosPlatformManager.startAudioRecord();
                 break;
             case R.id.nextSongBtn:
-
+                DuerosPlatformManager.stopAudioRecord();
                 break;
             case R.id.pauseOrPlayBtn:
-
                 break;
             default:
                 break;

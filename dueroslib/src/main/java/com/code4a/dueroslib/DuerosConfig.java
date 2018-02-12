@@ -3,13 +3,13 @@ package com.code4a.dueroslib;
 import android.Manifest;
 import android.app.Application;
 import android.content.pm.PackageManager;
-import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.widget.Toast;
 
 import com.code4a.dueroslib.androidsystemimpl.PlatformFactoryImpl;
 import com.code4a.dueroslib.androidsystemimpl.webview.BaseWebView;
+import com.code4a.dueroslib.devicemodule.cmccgateway.SmartGatewayDeviceModule;
 import com.code4a.dueroslib.devicemodule.screen.ScreenDeviceModule;
 import com.code4a.dueroslib.devicemodule.screen.message.RenderVoiceInputTextPayload;
 import com.code4a.dueroslib.devicemodule.voiceinput.VoiceInputDeviceModule;
@@ -34,6 +34,7 @@ import com.code4a.dueroslib.wakeup.WakeUp;
 import com.code4a.dueroslib.wakeup.WakeUpSuccessCallback;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -60,17 +61,16 @@ public final class DuerosConfig {
     private BaseWebView webView;
     // 唤醒
     private WakeUp wakeUp;
-    private WakeUpSuccessCallback wakeUpSuccessCallback;
+    private List<WakeUpSuccessCallback> wakeUpSuccessCallbacks;
     private boolean isStopListenReceiving;
     private long startTimeStopListen;
-    private boolean isInitFramework = false;
 
-    List<OnRecordingListener> recordingListeners;
+    private List<OnRecordingListener> recordingListeners;
+    private List<DuerosCustomTaskCallback> customTaskCallbacks;
 
     private DuerosConfig(String clientId, String clientSecret) {
         client_id = clientId;
         client_secret = clientSecret;
-        recordingListeners = new ArrayList<>();
     }
 
     protected static void init(Application application, String clientId, String clientSecret) {
@@ -88,13 +88,17 @@ public final class DuerosConfig {
 
     protected void clientCredentialsOauth(OauthRequest.OauthCallback<OauthClientCredentialsInfo> oauthCallback) {
         checkOauthParams();
-        baiduOauth = new BaiduOauthClientCredentials(client_id, client_secret, application);
+        if (baiduOauth == null || !(baiduOauth instanceof BaiduOauthClientCredentials)) {
+            baiduOauth = new BaiduOauthClientCredentials(client_id, client_secret, application);
+        }
         baiduOauth.authorize(application, oauthCallback);
     }
 
     protected void implicitGrantOauth(BaiduDialog.BaiduDialogListener listener, boolean isForceLogin, boolean isConfirmLogin) {
         checkOauthParams();
-        baiduOauth = new BaiduOauthImplicitGrant(client_id, application);
+        if (baiduOauth == null || !(baiduOauth instanceof BaiduOauthImplicitGrant)) {
+            baiduOauth = new BaiduOauthImplicitGrant(client_id, application);
+        }
         baiduOauth.authorize(application, listener, isForceLogin, isConfirmLogin);
     }
 
@@ -109,13 +113,16 @@ public final class DuerosConfig {
         return permissionCheck == PackageManager.PERMISSION_GRANTED;
     }
 
-    protected void initDcsFramework() {
+    protected boolean initDcsFramework() {
         if (baiduOauth == null || !baiduOauth.isSessionValid()) {
             throw new TokenInvalidException();
         } else {
             HttpConfig.setAccessToken(baiduOauth.getAccessToken());
         }
         if (!holdRelatedPermission()) throw new SecurityException("请授予App录音的权限！");
+        recordingListeners = Collections.synchronizedList(new ArrayList<OnRecordingListener>());
+        wakeUpSuccessCallbacks = Collections.synchronizedList(new ArrayList<WakeUpSuccessCallback>());
+        customTaskCallbacks = Collections.synchronizedList(new ArrayList<DuerosCustomTaskCallback>());
         platformFactory = new PlatformFactoryImpl(application);
         dcsFramework = new DcsFramework(platformFactory);
         deviceModuleFactory = dcsFramework.getDeviceModuleFactory();
@@ -157,33 +164,68 @@ public final class DuerosConfig {
         deviceModuleFactory.createAlertsDeviceModule();
         deviceModuleFactory.createSystemDeviceModule();
         deviceModuleFactory.createSpeakControllerDeviceModule();
+        initWakeUp();
+        return true;
+    }
+
+    private void initWakeUp() {
         // init唤醒
         wakeUp = new WakeUp(platformFactory.getWakeUp(), platformFactory.getAudioRecord());
         wakeUp.addWakeUpListener(wakeUpListener);
         // 开始录音，监听是否说了唤醒词
         wakeUp.startWakeUp();
-        isInitFramework = true;
+    }
+
+    public void stopAudioRecord() {
+        if (platformFactory != null && wakeUp != null) {
+            wakeUp.stopIAudioRecord();
+            platformFactory.resetAudioRecord();
+        }
+    }
+
+    public void startAudioRecord() {
+        if (platformFactory != null && wakeUp != null) {
+            wakeUp.startIAudioRecord(platformFactory.getAudioRecord());
+        }
     }
 
     private void createScreenDeviceModule() {
-        if (isInitFramework) {
-            getDeviceModuleFactory().createScreenDeviceModule();
-            getDeviceModuleFactory().getScreenDeviceModule()
-                    .addRenderVoiceInputTextListener(new ScreenDeviceModule.IRenderVoiceInputTextListener() {
-                        @Override
-                        public void onRenderVoiceInputText(RenderVoiceInputTextPayload payload) {
-                            notifyOnRecording(payload.text);
-                        }
+        getDeviceModuleFactory().createScreenDeviceModule();
+        getDeviceModuleFactory().getScreenDeviceModule()
+                .addRenderVoiceInputTextListener(new ScreenDeviceModule.IRenderVoiceInputTextListener() {
+                    @Override
+                    public void onRenderVoiceInputText(RenderVoiceInputTextPayload payload) {
+                        notifyOnRecording(payload.text);
+                    }
 
-                    });
-        } /*else {
-            new Handler(application.getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    createScreenDeviceModule();
-                }
-            }, 500);
-        }*/
+                });
+    }
+
+    protected void createGatewayDeviceModule() {
+        getDeviceModuleFactory().createSmartGatewayDeviceModule();
+        getDeviceModuleFactory().getSmartGatewayDeviceModule()
+                .addControlDeviceListener(new SmartGatewayDeviceModule.ControlDeviceListener() {
+                    @Override
+                    public void controlDevice(SmartGatewayDeviceModule.Command command, String deviceName, String type) {
+                        LogUtil.e(TAG, "controlDevice : " + deviceName + type);
+                        notifyControlDevice(command, deviceName, type);
+                    }
+                });
+    }
+
+    private void notifyControlDevice(SmartGatewayDeviceModule.Command command, String deviceName, String type) {
+        for (DuerosCustomTaskCallback customTaskCallback : customTaskCallbacks) {
+            if (customTaskCallback instanceof DuerosGatewayManager.GatewayControlListener) {
+                ((DuerosGatewayManager.GatewayControlListener) customTaskCallback).controlDevice(command, deviceName, type);
+            }
+        }
+    }
+
+    protected void addDuerosCustomTaskCallback(DuerosCustomTaskCallback customTaskCallback) {
+        if (customTaskCallbacks == null)
+            customTaskCallbacks = Collections.synchronizedList(new ArrayList<DuerosCustomTaskCallback>());
+        customTaskCallbacks.clear();
+        customTaskCallbacks.add(customTaskCallback);
     }
 
     void showShortToast(String text) {
@@ -191,7 +233,9 @@ public final class DuerosConfig {
     }
 
     protected void addWakeUpSuccessCallback(WakeUpSuccessCallback wakeUpSuccessCallback) {
-        this.wakeUpSuccessCallback = wakeUpSuccessCallback;
+        if (wakeUpSuccessCallbacks == null)
+            wakeUpSuccessCallbacks = Collections.synchronizedList(new ArrayList<WakeUpSuccessCallback>());
+        this.wakeUpSuccessCallbacks.add(wakeUpSuccessCallback);
     }
 
     protected void setWebView(BaseWebView webView) {
@@ -200,14 +244,6 @@ public final class DuerosConfig {
             platformFactory.setWebView(webView);
             createScreenDeviceModule();
         }
-    }
-
-    public void startWakeUp() {
-        if (wakeUp != null) wakeUp.startWakeUp();
-    }
-
-    public void stopWakeUp() {
-        if (wakeUp != null) wakeUp.stopWakeUp();
     }
 
     public void startRecording() {
@@ -223,6 +259,18 @@ public final class DuerosConfig {
         LogUtil.e(DuerosConfig.class, String.format("耗时:click->StopListen:%dms", t));
     }
 
+    public void startWakeUp() {
+        if (wakeUp != null) {
+            wakeUp.startWakeUp();
+        }
+    }
+
+    public void stopWakeUp() {
+        if (wakeUp != null) {
+            wakeUp.stopWakeUp();
+        }
+    }
+
     private void doUserActivity() {
         getDeviceModuleFactory().getSystemProvider().userActivity();
     }
@@ -230,7 +278,7 @@ public final class DuerosConfig {
     public void changeRecord() {
         if (!NetWorkUtil.isNetworkConnected(application)) {
             Toast.makeText(application, "当前网络连接失败,请稍后重试", Toast.LENGTH_SHORT).show();
-            startWakeUp();
+            if (wakeUp != null) wakeUp.startWakeUp();
             return;
         }
         if (CommonUtil.isFastDoubleClick()) {
@@ -261,21 +309,19 @@ public final class DuerosConfig {
     private IWakeUp.IWakeUpListener wakeUpListener = new IWakeUp.IWakeUpListener() {
         @Override
         public void onWakeUpSucceed() {
-            if (wakeUpSuccessCallback != null) wakeUpSuccessCallback.onSuccess();
+            notifyWakeUpSucceed();
             changeRecord();
         }
     };
 
-    protected void uninitFramework() {
-        if (wakeUp != null) {
-            // 先remove listener  停止唤醒,释放资源
-            wakeUp.removeWakeUpListener(wakeUpListener);
-            this.wakeUpSuccessCallback = null;
-            wakeUp.stopWakeUp();
-            wakeUp.releaseWakeUp();
-            wakeUp = null;
+    private void notifyWakeUpSucceed() {
+        for (WakeUpSuccessCallback wakeUpSuccessCallback : wakeUpSuccessCallbacks) {
+            wakeUpSuccessCallback.onSuccess();
         }
+    }
 
+    protected boolean uninitFramework() {
+        uninitWakeUp(true);
         if (dcsFramework != null) {
             dcsFramework.release();
             dcsFramework = null;
@@ -290,7 +336,25 @@ public final class DuerosConfig {
             recordingListeners.clear();
             recordingListeners = null;
         }
-        isInitFramework = false;
+        if (customTaskCallbacks != null) {
+            customTaskCallbacks.clear();
+            customTaskCallbacks = null;
+        }
+        return true;
+    }
+
+    private void uninitWakeUp(boolean isFinally) {
+        if (wakeUp != null) {
+            // 先remove listener  停止唤醒,释放资源
+            wakeUp.stopWakeUp();
+            wakeUp.removeWakeUpListener(wakeUpListener);
+            if (isFinally && wakeUpSuccessCallbacks != null) {
+                wakeUpSuccessCallbacks.clear();
+                wakeUpSuccessCallbacks = null;
+            }
+            wakeUp.releaseWakeUp();
+            wakeUp = null;
+        }
     }
 
     public IWebView getWebView() {
@@ -298,16 +362,9 @@ public final class DuerosConfig {
     }
 
     public void addOnRecordingListener(OnRecordingListener listener) {
-        if (recordingListeners != null) {
-            recordingListeners.add(listener);
-        } /*else {
-            new Handler(application.getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-
-                }
-            }, 200);
-        }*/
+        if (recordingListeners == null)
+            recordingListeners = Collections.synchronizedList(new ArrayList<OnRecordingListener>());
+        recordingListeners.add(listener);
     }
 
     void notifyRecording(boolean isStart) {

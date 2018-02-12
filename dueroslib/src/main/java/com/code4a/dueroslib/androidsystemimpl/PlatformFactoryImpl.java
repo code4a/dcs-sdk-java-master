@@ -75,6 +75,13 @@ public class PlatformFactoryImpl implements IPlatformFactory {
     }
 
     @Override
+    public void resetAudioRecord() {
+        if (audioRecord != null) {
+            audioRecord = null;
+        }
+    }
+
+    @Override
     public IWakeUp getWakeUp() {
         return new WakeUpImpl(context, linkedBlockingDeque);
     }

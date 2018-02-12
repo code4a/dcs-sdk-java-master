@@ -18,6 +18,7 @@ package com.code4a.dueroslib.androidsystemimpl.wakeup;
 
 import android.content.Context;
 import android.os.Handler;
+import android.os.SystemClock;
 
 import com.code4a.dueroslib.systeminterface.IWakeUp;
 import com.code4a.dueroslib.util.LogUtil;
@@ -107,11 +108,11 @@ public class WakeUpImpl implements IWakeUp {
     public synchronized void releaseWakeUp() {
         // 3.释放资源
         if (wakeUpDecodeThread != null) {
-            wakeUpDecodeThread.stopWakeUp();
             wakeUpDecodeThread.release();
             wakeUpDecodeThread = null;
         }
         this.isRelease = true;
+        SystemClock.sleep(500);
         int ret = wakeUpNative.wakeUpFree();
         LogUtil.d(TAG, "wakeUpFree-ret:" + ret);
     }

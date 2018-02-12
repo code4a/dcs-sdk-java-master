@@ -12,6 +12,7 @@ import com.code4a.dueroslib.framework.message.Payload;
 import com.code4a.dueroslib.util.LogUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -30,7 +31,7 @@ public class SmartGatewayDeviceModule extends BaseDeviceModule {
 
     public SmartGatewayDeviceModule(IMessageSender messageSender) {
         super(ApiConstants.NAMESPACE, messageSender);
-        listeners = new ArrayList<>();
+        listeners = Collections.synchronizedList(new ArrayList<ControlDeviceListener>());
     }
 
     @Override

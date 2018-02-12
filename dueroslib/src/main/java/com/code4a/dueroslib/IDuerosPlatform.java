@@ -17,79 +17,69 @@ public abstract class IDuerosPlatform {
     final String TAG = IDuerosPlatform.this.getClass().getSimpleName();
 
     protected DuerosConfig duerosConfig;
-    boolean initSuccess = false;
 
     protected IDuerosPlatform(Application application, String clientId, String clientSecert) {
         DuerosConfig.init(application, clientId, clientSecert);
         duerosConfig = DuerosConfig.getInstance();
-        initSuccess = false;
-        oauthDuerosPlatform(true);
     }
 
-    public void uninitDcsFramework() {
-        initSuccess = false;
-        duerosConfig.uninitFramework();
+    public boolean uninitDcsFramework() {
+        return duerosConfig.uninitFramework();
     }
 
-    public void initDcsFramework() {
-        duerosConfig.initDcsFramework();
-        initSuccess = true;
-        createCustomDeviceModules();
+    public boolean initDcsFramework() {
+        try {
+            if (duerosConfig.initDcsFramework()) {
+                createCustomDeviceModules();
+            }
+            return true;
+        } catch (TokenInvalidException e) {
+            LogUtil.e(TAG, "token invalid exception!");
+            oauthDuerosPlatform();
+        }
+        return false;
+    }
+
+    public void stopAudioRecord() {
+        duerosConfig.stopAudioRecord();
+    }
+
+    public void startAudioRecord() {
+        duerosConfig.startAudioRecord();
+    }
+
+    public void stopWakeUp() {
+        duerosConfig.stopWakeUp();
+    }
+
+    public void startWakeUp() {
+        duerosConfig.startWakeUp();
     }
 
     public void addOnRecordingListener(DuerosConfig.OnRecordingListener listener) {
-        if (initSuccess) {
-            duerosConfig.addOnRecordingListener(listener);
-        } else {
-            LogUtil.e(TAG, "addOnRecordingListener uninit");
-        }
+        duerosConfig.addOnRecordingListener(listener);
     }
 
     public void setWakeUpSuccessCallback(WakeUpSuccessCallback wakeUpSuccessCallback) {
-        if (!initSuccess) {
-            LogUtil.e(TAG, "setWakeUpSuccessCallback uninit");
-        }
         duerosConfig.addWakeUpSuccessCallback(wakeUpSuccessCallback);
     }
 
     public void setWebView(BaseWebView webView) {
-        if (initSuccess) {
-            duerosConfig.setWebView(webView);
-        } else {
-            LogUtil.e(TAG, "setWebView uninit");
-        }
+        duerosConfig.setWebView(webView);
     }
 
-    public void startWakeUp() {
-        if (initSuccess) {
-            duerosConfig.startWakeUp();
-        } else {
-            LogUtil.e(TAG, "startWakeUp uninit");
-        }
-    }
-
-    public void stopWakeUp() {
-        if (initSuccess) {
-            duerosConfig.stopWakeUp();
-        } else {
-            LogUtil.e(TAG, "stopWakeUp uninit");
-        }
-    }
-
-    public abstract void addDuerosCustomTaskCallback(DuerosCustomTaskCallback customTaskCallback);
+    public abstract <T extends DuerosCustomTaskCallback> void addDuerosCustomTaskCallback(T customTaskCallback);
 
     public abstract void createCustomDeviceModules();
 
-    public abstract void oauthDuerosPlatform(boolean isInitFramework);
+    public abstract void oauthDuerosPlatform();
 
     public void changeRecording() {
-        if (initSuccess) {
-            try {
-                duerosConfig.changeRecord();
-            } catch (TokenInvalidException e) {
-                LogUtil.e(TAG, e.getMessage());
-                oauthDuerosPlatform(false);
-            }
+        try {
+            duerosConfig.changeRecord();
+        } catch (TokenInvalidException e) {
+            LogUtil.e(TAG, e.getMessage());
+            oauthDuerosPlatform();
         }
     }
 

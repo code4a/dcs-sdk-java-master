@@ -38,8 +38,8 @@ public class WakeUpDecodeThread extends Thread {
     private WakeUpNative wakeUpNative;
     private Handler handler;
     private volatile boolean isStart = false;
-    private LinkedBlockingDeque<byte[]> linkedBlockingDeque;
     private volatile boolean isRelease = false;
+    private LinkedBlockingDeque<byte[]> linkedBlockingDeque;
 
     public WakeUpDecodeThread(LinkedBlockingDeque<byte[]> linkedBlockingDeque,
                               WakeUpNative wakeUpNative,
@@ -48,20 +48,23 @@ public class WakeUpDecodeThread extends Thread {
         this.wakeUpNative = wakeUpNative;
         this.handler = handler;
         isRelease = false;
+        LogUtil.e(TAG, "thread name : " + this.getName());
     }
 
     /**
      * 开始唤醒
      */
     public void startWakeUp() {
-        if (isStart || isRelease) {
+        if (isStart) {
             return;
         }
         isStart = true;
+        LogUtil.e(TAG, " wakeup start ---- thread name : " + WakeUpDecodeThread.this.getName());
         this.start();
     }
 
     public boolean isStart() {
+        LogUtil.e(TAG, " isStart : " + isStart + " ---- thread name : " + this.getName());
         return isStart;
     }
 
@@ -70,18 +73,18 @@ public class WakeUpDecodeThread extends Thread {
      */
     public void stopWakeUp() {
         isStart = false;
+        LogUtil.e(TAG, " wakeup stop --- thread name : " + this.getName());
     }
 
     @Override
     public void run() {
         super.run();
-        LogUtil.i(TAG, "wakeup wakeUpDecode start");
+        LogUtil.i(TAG, "wakeup wakeUpDecode start--- thread name : " + this.getName());
         while (isStart) {
             if (isRelease) return;
             if (wakeUpDecode()) break;
-            //            SystemClock.sleep(500);
         }
-        LogUtil.i(TAG, "wakeup after wakeUpDecode over !!");
+        LogUtil.i(TAG, "wakeup after wakeUpDecode over !!--- thread name : " + this.getName());
         LogUtil.i(TAG, "wakeup after linkedBlockingDeque size:" + linkedBlockingDeque.size());
 
         if (isWakeUp) {
@@ -101,6 +104,7 @@ public class WakeUpDecodeThread extends Thread {
 
     private synchronized boolean wakeUpDecode() {
         try {
+            if (isRelease) return false;
             byte[] data = linkedBlockingDeque.take();
 
             // 暂时不检测vad
@@ -114,6 +118,7 @@ public class WakeUpDecodeThread extends Thread {
                 // 是否为最后一帧数据
                 boolean isEnd = false;
                 short[] arr = byteArray2ShortArray(data, data.length / 2);
+                if (isRelease) return false;
                 int ret = wakeUpNative.wakeUpDecode(
                         arr,
                         arr.length,
@@ -124,12 +129,13 @@ public class WakeUpDecodeThread extends Thread {
                         voiceOffset++,
                         isEnd
                 );
+                LogUtil.w(TAG, " --- wakeUpDecode --- current thread name : " + this.getName());
                 // 唤醒成功
                 if (ret == WAKEUP_SUCCEED) {
                     LogUtil.i(TAG, "wakeup wakeUpDecode ret:" + ret);
                     isWakeUp = true;
                     stopWakeUp();
-                    LogUtil.i(TAG, "wakeup wakeUpDecode succeed !!");
+                    LogUtil.i(TAG, "wakeup wakeUpDecode succeed !!--- thread name : " + this.getName());
                     return true;
                 }
             }
