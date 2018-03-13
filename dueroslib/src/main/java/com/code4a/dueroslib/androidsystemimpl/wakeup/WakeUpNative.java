@@ -25,9 +25,9 @@ public class WakeUpNative {
 
     // 加载动态库.so文件
     static {
-        System.loadLibrary("wakeup");
         // 唤醒词解码so库
         System.loadLibrary("bdEASRAndroid");
+        System.loadLibrary("wakeup");
     }
 
     /**

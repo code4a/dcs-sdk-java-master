@@ -59,9 +59,9 @@ public class DcsHttpManager {
                     .retryOnConnectionFailure(false)
                     .readTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS)
                     .writeTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS)
-                    .connectTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS)
+                    .connectTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
                     // .addInterceptor(new RetryInterceptor(3))
-                    .addInterceptor(new LoggingInterceptor());
+//                    .addInterceptor(new LoggingInterceptor());
             mOkHttpClient = builder.build();
         } else {
             mOkHttpClient = okHttpClient;

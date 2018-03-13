@@ -62,7 +62,7 @@ public final class DuerosConfig {
     // 唤醒
     private WakeUp wakeUp;
     private List<WakeUpSuccessCallback> wakeUpSuccessCallbacks;
-    private boolean isStopListenReceiving;
+    private boolean isStopListenReceiving = false;
     private long startTimeStopListen;
 
     private List<OnRecordingListener> recordingListeners;
@@ -71,6 +71,12 @@ public final class DuerosConfig {
     private DuerosConfig(String clientId, String clientSecret) {
         client_id = clientId;
         client_secret = clientSecret;
+    }
+
+    private void initList() {
+        recordingListeners = Collections.synchronizedList(new ArrayList<OnRecordingListener>());
+        wakeUpSuccessCallbacks = Collections.synchronizedList(new ArrayList<WakeUpSuccessCallback>());
+        customTaskCallbacks = Collections.synchronizedList(new ArrayList<DuerosCustomTaskCallback>());
     }
 
     protected static void init(Application application, String clientId, String clientSecret) {
@@ -120,9 +126,7 @@ public final class DuerosConfig {
             HttpConfig.setAccessToken(baiduOauth.getAccessToken());
         }
         if (!holdRelatedPermission()) throw new SecurityException("请授予App录音的权限！");
-        recordingListeners = Collections.synchronizedList(new ArrayList<OnRecordingListener>());
-        wakeUpSuccessCallbacks = Collections.synchronizedList(new ArrayList<WakeUpSuccessCallback>());
-        customTaskCallbacks = Collections.synchronizedList(new ArrayList<DuerosCustomTaskCallback>());
+        initList();
         platformFactory = new PlatformFactoryImpl(application);
         dcsFramework = new DcsFramework(platformFactory);
         deviceModuleFactory = dcsFramework.getDeviceModuleFactory();
@@ -214,6 +218,7 @@ public final class DuerosConfig {
     }
 
     private void notifyControlDevice(SmartGatewayDeviceModule.Command command, String deviceName, String type) {
+        if (customTaskCallbacks == null) return;
         for (DuerosCustomTaskCallback customTaskCallback : customTaskCallbacks) {
             if (customTaskCallback instanceof DuerosGatewayManager.GatewayControlListener) {
                 ((DuerosGatewayManager.GatewayControlListener) customTaskCallback).controlDevice(command, deviceName, type);
@@ -284,7 +289,7 @@ public final class DuerosConfig {
         if (CommonUtil.isFastDoubleClick()) {
             return;
         }
-        if (TextUtils.isEmpty(HttpConfig.getAccessToken())) {
+        if (dcsFramework == null || TextUtils.isEmpty(HttpConfig.getAccessToken())) {
             throw new TokenInvalidException();
         }
         if (!dcsFramework.getDcsClient().isConnected()) {
@@ -315,6 +320,7 @@ public final class DuerosConfig {
     };
 
     private void notifyWakeUpSucceed() {
+        if (wakeUpSuccessCallbacks == null) return;
         for (WakeUpSuccessCallback wakeUpSuccessCallback : wakeUpSuccessCallbacks) {
             wakeUpSuccessCallback.onSuccess();
         }
@@ -368,6 +374,7 @@ public final class DuerosConfig {
     }
 
     void notifyRecording(boolean isStart) {
+        if (recordingListeners == null) return;
         for (OnRecordingListener recordingListener : recordingListeners) {
             if (isStart) {
                 recordingListener.startRecording();
@@ -378,6 +385,7 @@ public final class DuerosConfig {
     }
 
     void notifyOnRecording(String text) {
+        if (recordingListeners == null) return;
         for (OnRecordingListener recordingListener : recordingListeners) {
             recordingListener.onRecording(text);
         }

@@ -121,6 +121,7 @@ public class VoiceInputDeviceModule extends BaseDeviceModule {
 
     @Override
     public void release() {
+        if (audioInput != null) audioInput.stopRecord();
         voiceInputListeners.clear();
     }
 

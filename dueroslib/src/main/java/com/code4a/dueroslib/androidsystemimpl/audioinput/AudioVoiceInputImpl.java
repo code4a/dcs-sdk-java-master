@@ -20,6 +20,7 @@ import android.os.Handler;
 
 import com.code4a.dueroslib.framework.message.DcsStreamRequestBody;
 import com.code4a.dueroslib.systeminterface.IAudioInput;
+import com.code4a.dueroslib.util.LogUtil;
 
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -42,6 +43,7 @@ public class AudioVoiceInputImpl implements IAudioInput {
 
     @Override
     public void startRecord() {
+        LogUtil.e(AudioVoiceInputImpl.class, " ----- startRecord --------- ");
         DcsStreamRequestBody dcsStreamRequestBody = new DcsStreamRequestBody();
         audioInputListener.onStartRecord(dcsStreamRequestBody);
         audioVoiceInputThread = new AudioVoiceInputThread(
@@ -61,9 +63,12 @@ public class AudioVoiceInputImpl implements IAudioInput {
 
     @Override
     public void stopRecord() {
-        audioVoiceInputThread.stopWriteStream();
-        if (audioInputListener != null) {
-            audioInputListener.onStopRecord();
+        LogUtil.e(AudioVoiceInputImpl.class, " ----- stopRecord --------- ");
+        if (audioVoiceInputThread != null) {
+            audioVoiceInputThread.stopWriteStream();
+            if (audioInputListener != null) {
+                audioInputListener.onStopRecord();
+            }
         }
     }
 
