@@ -70,7 +70,7 @@ public class AudioVoiceInputThread extends Thread {
     public void run() {
         super.run();
         while (isStart) {
-            LogUtil.e(AudioVoiceInputThread.class, " ----- recording ------ ");
+//            LogUtil.e(AudioVoiceInputThread.class, " ----- recording ------ ");
             try {
                 byte[] recordAudioData = linkedBlockingDeque.pollFirst();
                 if (null != recordAudioData) {

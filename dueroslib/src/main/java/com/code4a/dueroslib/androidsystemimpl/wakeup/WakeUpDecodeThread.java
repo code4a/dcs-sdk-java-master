@@ -129,7 +129,7 @@ public class WakeUpDecodeThread extends Thread {
                         voiceOffset++,
                         isEnd
                 );
-                LogUtil.w(TAG, " --- wakeUpDecode --- current thread name : " + this.getName());
+//                LogUtil.w(TAG, " --- wakeUpDecode --- current thread name : " + this.getName());
                 // 唤醒成功
                 if (ret == WAKEUP_SUCCEED) {
                     LogUtil.i(TAG, "wakeup wakeUpDecode ret:" + ret);

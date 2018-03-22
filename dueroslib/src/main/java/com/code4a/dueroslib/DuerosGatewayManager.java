@@ -5,6 +5,7 @@ import android.app.Application;
 import com.code4a.dueroslib.devicemodule.cmccgateway.SmartGatewayDeviceModule;
 import com.code4a.dueroslib.oauth.api.OauthClientCredentialsInfo;
 import com.code4a.dueroslib.oauth.api.OauthRequest;
+import com.code4a.dueroslib.oauth.exception.OAuthFailureException;
 import com.code4a.dueroslib.util.LogUtil;
 
 /**
@@ -30,7 +31,8 @@ public final class DuerosGatewayManager extends IDuerosPlatform {
     }
 
     @Override
-    public void oauthDuerosPlatform() {
+    public void oauthDuerosPlatform() throws OAuthFailureException {
+        LogUtil.w(TAG, " --- oauthDuerosPlatform --- ");
         duerosConfig.clientCredentialsOauth(new OauthRequest.OauthCallback<OauthClientCredentialsInfo>() {
             @Override
             public void onSuccess(OauthClientCredentialsInfo info) {
@@ -39,8 +41,8 @@ public final class DuerosGatewayManager extends IDuerosPlatform {
 
             @Override
             public void onFailure(String string) {
-                LogUtil.w(TAG, "client credentials failed! " + string);
-                throw new RuntimeException(string);
+                LogUtil.e(TAG, "client credentials failed! " + string);
+                throw new OAuthFailureException(string);
             }
 
             @Override

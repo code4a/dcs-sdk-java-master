@@ -3,6 +3,7 @@ package com.code4a.dueroslib;
 import android.app.Application;
 
 import com.code4a.dueroslib.androidsystemimpl.webview.BaseWebView;
+import com.code4a.dueroslib.oauth.exception.OAuthFailureException;
 import com.code4a.dueroslib.oauth.exception.TokenInvalidException;
 import com.code4a.dueroslib.systeminterface.IWebView;
 import com.code4a.dueroslib.util.LogUtil;
@@ -36,6 +37,8 @@ public abstract class IDuerosPlatform {
         } catch (TokenInvalidException e) {
             LogUtil.e(TAG, "token invalid exception!");
             oauthDuerosPlatform();
+        } catch (SecurityException se){
+            LogUtil.e(TAG, "没有录音权限！");
         }
         return false;
     }
@@ -72,7 +75,7 @@ public abstract class IDuerosPlatform {
 
     public abstract void createCustomDeviceModules();
 
-    public abstract void oauthDuerosPlatform();
+    public abstract void oauthDuerosPlatform() throws OAuthFailureException;
 
     public void changeRecording() {
         try {

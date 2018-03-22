@@ -4,6 +4,7 @@ import android.app.Application;
 
 import com.code4a.dueroslib.oauth.api.OauthClientCredentialsInfo;
 import com.code4a.dueroslib.oauth.api.OauthRequest;
+import com.code4a.dueroslib.oauth.exception.OAuthFailureException;
 import com.code4a.dueroslib.systeminterface.IMediaPlayer;
 import com.code4a.dueroslib.util.LogUtil;
 
@@ -29,36 +30,36 @@ public final class DuerosAudioPlayerManager extends IDuerosPlatform {
                     @Override
                     public void onPaused() {
                         super.onPaused();
-//                        pauseOrPlayButton.setText(getResources().getString(R.string.audio_paused));
-//                        isPause = true;
+                        //                        pauseOrPlayButton.setText(getResources().getString(R.string.audio_paused));
+                        //                        isPause = true;
                     }
 
                     @Override
                     public void onPlaying() {
                         super.onPlaying();
-//                        pauseOrPlayButton.setText(getResources().getString(R.string.audio_playing));
-//                        isPause = false;
+                        //                        pauseOrPlayButton.setText(getResources().getString(R.string.audio_playing));
+                        //                        isPause = false;
                     }
 
                     @Override
                     public void onCompletion() {
                         super.onCompletion();
-//                        pauseOrPlayButton.setText(getResources().getString(R.string.audio_default));
-//                        isPause = false;
+                        //                        pauseOrPlayButton.setText(getResources().getString(R.string.audio_default));
+                        //                        isPause = false;
                     }
 
                     @Override
                     public void onStopped() {
                         super.onStopped();
-//                        pauseOrPlayButton.setText(getResources().getString(R.string.audio_default));
-//                        isPause = true;
+                        //                        pauseOrPlayButton.setText(getResources().getString(R.string.audio_default));
+                        //                        isPause = true;
                     }
                 });
         duerosConfig.getDeviceModuleFactory().createPlaybackControllerDeviceModule();
     }
 
     @Override
-    public void oauthDuerosPlatform() {
+    public void oauthDuerosPlatform() throws OAuthFailureException {
         duerosConfig.clientCredentialsOauth(new OauthRequest.OauthCallback<OauthClientCredentialsInfo>() {
             @Override
             public void onSuccess(OauthClientCredentialsInfo info) {
@@ -68,7 +69,7 @@ public final class DuerosAudioPlayerManager extends IDuerosPlatform {
             @Override
             public void onFailure(String string) {
                 LogUtil.w(TAG, "client credentials failed! " + string);
-                throw new RuntimeException(string);
+                throw new OAuthFailureException(string);
             }
 
             @Override

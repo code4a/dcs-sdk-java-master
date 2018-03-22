@@ -29,6 +29,7 @@ import com.code4a.dueroslib.http.callback.DirectCallback;
 import com.code4a.dueroslib.http.intercepter.LoggingInterceptor;
 import com.code4a.dueroslib.http.request.RequestCall;
 import com.code4a.dueroslib.http.utils.Platform;
+import com.code4a.dueroslib.util.LogUtil;
 import com.code4a.dueroslib.util.ObjectMapperUtil;
 
 import java.io.IOException;
@@ -40,6 +41,7 @@ import java.util.concurrent.TimeUnit;
  * Created by zhangyan@baidu.com on 2017/5/15.
  */
 public class DcsHttpManager {
+    private static final String TAG = DcsHttpManager.class.getSimpleName();
     // 默认时间，比如超时时间
     public static final long DEFAULT_MILLISECONDS = 60 * 1000L;
     private OkHttpClient mOkHttpClient;
@@ -97,7 +99,7 @@ public class DcsHttpManager {
     }
 
     public void execute(final RequestCall requestCall, DcsCallback dcsCallback) {
-
+        LogUtil.d(TAG, " ---- execute ---- 1 ");
         if (dcsCallback == null) {
             dcsCallback = DcsCallback.backDefaultCallBack;
         }
@@ -107,11 +109,13 @@ public class DcsHttpManager {
         requestCall.getCall().enqueue(new Callback() {
             @Override
             public void onFailure(Call call, final IOException e) {
+                LogUtil.d(TAG, " ---- execute ---- 1 onFailure ");
                 sendFailResultCallback(call, e, finalDCSCallback, id);
             }
 
             @Override
             public void onResponse(final Call call, final Response response) {
+                LogUtil.d(TAG, " ---- execute ---- 1 onResponse ");
                 try {
                     if (call.isCanceled()) {
                         sendFailResultCallback(call, new IOException("Canceled!"), finalDCSCallback, id);
@@ -137,11 +141,12 @@ public class DcsHttpManager {
     }
 
     public <T> void execute(RequestCall requestCall, final Class<T> clazz, final DirectCallback<T> directCallback) {
-
+        LogUtil.d(TAG, " ---- execute ---- 2 ");
         final int id = requestCall.getOkHttpRequest().getId();
         requestCall.getCall().enqueue(new Callback() {
             @Override
             public void onFailure(final Call call, final IOException e) {
+                LogUtil.d(TAG, " ---- execute ---- 2 onFailure ");
                 if(directCallback == null) return;
                 mPlatform.execute(new Runnable() {
                     @Override
@@ -153,6 +158,7 @@ public class DcsHttpManager {
 
             @Override
             public void onResponse(final Call call, final Response response) {
+                LogUtil.d(TAG, " ---- execute ---- 2 onResponse ");
                 try {
                     if (call.isCanceled()) {
                         if(directCallback == null) return;

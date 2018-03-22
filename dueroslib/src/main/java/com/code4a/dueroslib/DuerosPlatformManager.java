@@ -3,6 +3,7 @@ package com.code4a.dueroslib;
 import android.app.Application;
 
 import com.code4a.dueroslib.androidsystemimpl.webview.BaseWebView;
+import com.code4a.dueroslib.oauth.exception.OAuthFailureException;
 import com.code4a.dueroslib.systeminterface.IWebView;
 import com.code4a.dueroslib.wakeup.WakeUpSuccessCallback;
 
@@ -25,7 +26,11 @@ public final class DuerosPlatformManager {
 
     public static void initDuerosPlatformManager(IDuerosPlatform iDuerosPlatform) {
         DuerosPlatformManager.iDuerosPlatform = iDuerosPlatform;
-        DuerosPlatformManager.iDuerosPlatform.oauthDuerosPlatform();
+        try {
+            DuerosPlatformManager.iDuerosPlatform.oauthDuerosPlatform();
+        } catch (OAuthFailureException e) {
+            e.printStackTrace();
+        }
     }
 
     public static DuerosGatewayManager createDuerosGatewayManager(Application application, String clientId, String clientSecert) {

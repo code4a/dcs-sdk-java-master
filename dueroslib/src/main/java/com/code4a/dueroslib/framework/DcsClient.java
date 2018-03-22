@@ -21,7 +21,6 @@ import android.net.ConnectivityManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.baidu.dcs.okhttp3.Call;
 import com.baidu.dcs.okhttp3.Response;
@@ -48,6 +47,8 @@ import com.code4a.dueroslib.util.SystemServiceManager;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.net.ssl.SSLException;
 
 import static com.code4a.dueroslib.api.IConnectionStatusListener.ConnectionStatus.CONNECTED;
 
@@ -111,9 +112,9 @@ public class DcsClient {
             new NetWorkStateReceiver.INetWorkStateListener() {
                 @Override
                 public void onNetWorkStateChange(int netType) {
-                    Log.d(TAG, "onNetWorkStateChange-netType:" + netType);
+                    LogUtil.d(TAG, "onNetWorkStateChange-netType:" + netType);
                     if (netType != NetWorkUtil.NETWORK_NONE) {
-                        Log.d(TAG, " onNetWorkStateChange ");
+                        LogUtil.d(TAG, " onNetWorkStateChange ");
                         tryConnectAtOnce();
                     } else {
                         connectStatus = IConnectionStatusListener.ConnectionStatus.DISCONNECTED;
@@ -131,11 +132,11 @@ public class DcsClient {
 
         MultipartParser.IMultipartParserListener parserListener = new ClientParserListener();
 
-        directiveParser = new MultipartParser(decoder, new ClientParserListener() {
+        directiveParser = new MultipartParser("directiveParser-" + Thread.currentThread().getId(), decoder, new ClientParserListener() {
             @Override
             public void onClose() {
                 super.onClose();
-                Log.d(TAG, "directiveParser-onClose");
+                LogUtil.d(TAG, "directiveParser-onClose");
 
                 if (connectStatus != IConnectionStatusListener.ConnectionStatus.PENDING) {
                     connectStatus = IConnectionStatusListener.ConnectionStatus.DISCONNECTED;
@@ -148,6 +149,7 @@ public class DcsClient {
             @Override
             public void onResponseBody(DcsResponseBody responseBody) {
                 super.onResponseBody(responseBody);
+                LogUtil.d(TAG, "directiveParser-onResponseBody");
                 Directive directive = responseBody.getDirective();
                 if (directive != null) {
                     Payload payload = directive.getPayload();
@@ -160,7 +162,7 @@ public class DcsClient {
                 }
             }
         });
-        eventParser = new MultipartParser(decoder, parserListener);
+        eventParser = new MultipartParser("eventParser-" + Thread.currentThread().getId(), decoder, parserListener);
         netWorkStateReceiver = new NetWorkStateReceiver();
         IntentFilter filter = new IntentFilter();
         filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -175,7 +177,7 @@ public class DcsClient {
     }
 
     public void release() {
-        Log.d(TAG, "release");
+        LogUtil.d(TAG, "release");
         stopTryConnect();
         try {
             if (netWorkStateReceiver != null) {
@@ -224,7 +226,7 @@ public class DcsClient {
 
     private void connect() {
         if (TextUtils.isEmpty(HttpConfig.getAccessToken())) {
-            Log.d(TAG, "connect-accessToken is null !");
+            LogUtil.d(TAG, "connect-accessToken is null !");
             return;
         }
         if (!isReleased && connectStatus == IConnectionStatusListener.ConnectionStatus.DISCONNECTED) {
@@ -248,7 +250,7 @@ public class DcsClient {
      */
     public void sendRequest(DcsRequestBody requestBody,
                             DcsStreamRequestBody streamRequestBody, final IResponseListener listener) {
-        Log.e("logId", "logId send  stream start");
+        LogUtil.e(TAG, "sendRequest logId send  stream start");
         decoder.interruptDecode();
         httpRequestImp.cancelRequest(HttpConfig.HTTP_VOICE_TAG);
         httpRequestImp.doPostEventMultipartAsync(requestBody,
@@ -307,6 +309,13 @@ public class DcsClient {
                         || call.request().tag().equals(HttpConfig.HTTP_VOICE_TAG)) {
                     fireOnFailed(e.getMessage());
                 }
+                if(e instanceof SSLException){ // TODO 可能上传的线程死掉了
+                    if (e.getMessage().contains("Connection reset by peer")) {
+                        // tryConnect
+                        LogUtil.e(TAG, "onError, Connection reset by peer, Maybe upload thread is dead! is need connect : " + isNeedConnect);
+                        tryConnect();
+                    }
+                }
             }
 
             @Override
@@ -323,9 +332,10 @@ public class DcsClient {
 
             @Override
             public Response parseNetworkResponse(Response response, int id) throws Exception {
+                LogUtil.d(TAG, "parseNetworkResponse " + response.code());
                 int statusCode = response.code();
                 if (statusCode == 200) {
-                    Log.d(TAG, "onResponse OK ," + response.request().tag());
+                    LogUtil.d(TAG, "parseNetworkResponse OK ," + response.request().tag());
                     multipartParser.parseResponse(response);
                 }
                 return response;
@@ -402,7 +412,7 @@ public class DcsClient {
 
         @Override
         public void onClose() {
-
+            LogUtil.e(TAG, " ClientParserListener onClose ");
         }
     }
 

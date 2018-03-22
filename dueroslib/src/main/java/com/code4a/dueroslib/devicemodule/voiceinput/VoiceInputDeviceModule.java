@@ -69,6 +69,7 @@ public class VoiceInputDeviceModule extends BaseDeviceModule {
                 sendListenStartedEvent(dcsStreamRequestBody, new IResponseListener() {
                     @Override
                     public void onSucceed(int statusCode) {
+                        LogUtil.d(TAG, "onSucceed,statusCode:" + statusCode);
                         fireOnSucceed(statusCode);
                         // 没有下发新的语音speak-stream
                         if (statusCode == 204) {
@@ -135,6 +136,7 @@ public class VoiceInputDeviceModule extends BaseDeviceModule {
     }
 
     private void sendListenStartedEvent(DcsStreamRequestBody streamRequestBody, IResponseListener responseListener) {
+        LogUtil.d(TAG, " ---- sendListenStartedEvent ----- ");
         String dialogRequestId = dialogRequestIdHandler.createActiveDialogRequestId();
         String name = ApiConstants.Events.ListenStarted.NAME;
         DialogRequestIdHeader header = new DialogRequestIdHeader(getNameSpace(), name, dialogRequestId);

@@ -20,6 +20,7 @@ import com.baidu.dcs.okhttp3.Response;
 import com.code4a.dueroslib.http.HttpConfig;
 import com.code4a.dueroslib.http.HttpRequestInterface;
 import com.code4a.dueroslib.http.callback.ResponseCallback;
+import com.code4a.dueroslib.util.LogUtil;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -82,11 +83,13 @@ public class HeartBeat {
         httpRequest.doGetPingAsync(null, new ResponseCallback() {
             @Override
             public void onError(Call call, Exception e, int id) {
+                LogUtil.e(TAG, "startPing onError - " + e.getMessage());
                 super.onError(call, e, id);
             }
 
             @Override
             public Response parseNetworkResponse(Response response, int id) throws Exception {
+                LogUtil.e(TAG, "startPing parseNetworkResponse - ");
                 return super.parseNetworkResponse(response, id);
             }
         });

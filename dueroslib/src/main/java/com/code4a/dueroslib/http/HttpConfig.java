@@ -32,6 +32,7 @@ import java.util.UUID;
  * Created by zhangyan42@baidu.com on 2017/6/1.
  */
 public class HttpConfig {
+    public static final String TAG = HttpConfig.class.getSimpleName();
     // 请求https
     public static final String HTTP_PREFIX = "https://";
     // 请求host
@@ -130,7 +131,7 @@ public class HttpConfig {
                 HttpConfig.HttpHeaders.DEBUG_PARAM);
         // headers.put(HttpHeaders.DEBUG_BOSS, "nj03-rp-m22nlp156.nj03.baidu.com:8486");
         String logId = UUID.randomUUID().toString();
-        Log.d("time", "logid：" + logId);
+        Log.d(TAG, "time - logId：" + logId);
         headers.put(HttpHeaders.SAIYA_LOGID, logId);
         headers.put(HttpHeaders.USER_AGENT,
                 "sampleapp/" + DcsVersion.VERSION_NAME);

@@ -15,14 +15,13 @@
  */
 package com.code4a.dueroslib.framework.dispatcher;
 
-import android.util.Log;
-
 import com.baidu.dcs.okhttp3.Response;
 import com.baidu.dcs.okhttp3.internal.http2.StreamResetException;
 import com.code4a.dueroslib.framework.DcsStream;
 import com.code4a.dueroslib.framework.decoder.IDecoder;
 import com.code4a.dueroslib.framework.message.DcsResponseBody;
 import com.code4a.dueroslib.http.HttpConfig;
+import com.code4a.dueroslib.util.LogUtil;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -47,16 +46,19 @@ public class MultipartParser extends Parser {
     private final IMultipartParserListener multipartParserListener;
     private static final byte[] HEARTBEAT_BODY = new byte[]{0x7b, 0x7d, 0x0d, 0x0a};
     private static final byte[] EMPTY_PART = new byte[]{0x0d, 0x0a};
+    private String multipartParserBossName;
 
-    public MultipartParser(IDecoder decoder, IMultipartParserListener listener) {
+    public MultipartParser(String bossName, IDecoder decoder, IMultipartParserListener listener) {
         this.decoder = decoder;
         if (this.decoder == null) {
             throw new NullPointerException("decoder is null.");
         }
+        this.multipartParserBossName = bossName;
         this.multipartParserListener = listener;
     }
 
     public synchronized void parseResponse(Response response) throws IOException {
+        LogUtil.d(TAG, getCurrentMessage() + " parseResponse ");
         String boundary = getBoundary(response);
         if (boundary != null) {
             if (HttpConfig.HTTP_VOICE_TAG.equals(response.request().tag())) {
@@ -67,26 +69,38 @@ public class MultipartParser extends Parser {
         }
     }
 
+    private String getCurrentMessage() {
+        return "boss name - " + multipartParserBossName + " , thread id - " + Thread.currentThread().getId() + " , class hashCode - " + this.getClass().getSimpleName() + "@" + Integer.toHexString(hashCode()) + "\r\n";
+    }
+
     private void parseStream(InputStream inputStream, String boundary) throws IOException {
+        LogUtil.d(TAG, getCurrentMessage() + " parseStream ");
         MultipartStreamCopy multipartStream =
                 new MultipartStreamCopy(inputStream, boundary.getBytes(), BUFFER_SIZE, null);
         parseMultipartStream(multipartStream);
     }
 
     private void parseMultipartStream(MultipartStreamCopy multipartStream) throws IOException {
+        LogUtil.d(TAG, getCurrentMessage() + " parseMultipartStream ");
         try {
+            long start = System.currentTimeMillis();
             boolean hasNextPart = multipartStream.skipPreamble();
+            LogUtil.e(TAG, getCurrentMessage() + " parseMultipartStream skipPreamble hasNexPart : " + hasNextPart + " , ---  need timeMillis --- : " + (System.currentTimeMillis() - start));
             while (hasNextPart) {
                 handlePart(multipartStream);
                 hasNextPart = multipartStream.readBoundary();
+                LogUtil.e(TAG, getCurrentMessage() + " parseMultipartStream readBoundary hasNexPart : " + hasNextPart);
             }
         } catch (DcsJsonProcessingException exception) {
+            LogUtil.d(TAG, getCurrentMessage() + " DcsJsonProcessingException ");
             if (multipartParserListener != null) {
                 multipartParserListener.onParseFailed(exception.getUnparsedCotent());
             }
         } catch (MultipartStreamCopy.MalformedStreamException exception) {
+            LogUtil.d(TAG, getCurrentMessage() + " MalformedStreamException ");
             fireOnClose();
         } catch (StreamResetException streamResetException) {
+            LogUtil.d(TAG, getCurrentMessage() + " streamResetException ");
             fireOnClose();
         }
     }
@@ -98,16 +112,21 @@ public class MultipartParser extends Parser {
     }
 
     private void handlePart(MultipartStreamCopy multipartStream) throws IOException {
+        LogUtil.e(TAG, getCurrentMessage() + " ++ handlePart ++ ");
         Map<String, String> headers = getPartHeaders(multipartStream);
+        LogUtil.d(TAG, getCurrentMessage() + " ++ handlePart ++ getPartHeaders is empty : " + (headers == null));
         if (headers != null) {
             if (isPartJSON(headers)) {
+                LogUtil.d(TAG, getCurrentMessage() + " ++ handlePart ++ getPartHeaders is part json ");
                 long start = System.currentTimeMillis();
                 byte[] partBytes = getPartBytes(multipartStream);
+                LogUtil.d(TAG, getCurrentMessage() + " ++ handlePart ++ getPartBytes in multipartStream ");
                 String content = new String(partBytes);
-                Log.d(TAG, "jsonContent: \r\n" + content);
+                LogUtil.d(TAG, getCurrentMessage() + " --- jsonContent --- : \r\n" + content);
                 handleJsonData(partBytes);
-                Log.d(TAG, "json parse:" + (System.currentTimeMillis() - start));
+                LogUtil.d(TAG, getCurrentMessage() + " --- json parse timeMillis --- : " + (System.currentTimeMillis() - start));
             } else if (isOctetStream(headers)) {
+                LogUtil.d(TAG, getCurrentMessage() + " -- handle audio --- ");
                 handleAudio(headers, multipartStream);
             }
         }
@@ -131,42 +150,42 @@ public class MultipartParser extends Parser {
     private void handleAudio(Map<String, String> headers, MultipartStreamCopy multipartStream)
             throws IOException {
         synchronized (decoder) {
-        String contentId = getMultipartContentId(headers);
-        final DcsStream dcsStream = new DcsStream();
-        InputStream inputStream = multipartStream.newInputStream();
-        try {
-            final AudioData audioData = new AudioData(contentId, dcsStream);
-            if (multipartParserListener != null) {
-                multipartParserListener.onAudioData(audioData);
-            }
-            decodeListener = new IDecoder.IDecodeListener() {
-                @Override
-                public void onDecodeInfo(int sampleRate, int channels) {
-                    Log.d(TAG, "Decoder-onDecodeInfo-sampleRate=" + sampleRate);
-                    Log.d(TAG, "Decoder-onDecodeInfo-channels=" + channels);
-                    dcsStream.sampleRate = sampleRate;
-                    dcsStream.channels = channels;
+            String contentId = getMultipartContentId(headers);
+            final DcsStream dcsStream = new DcsStream();
+            InputStream inputStream = multipartStream.newInputStream();
+            try {
+                final AudioData audioData = new AudioData(contentId, dcsStream);
+                if (multipartParserListener != null) {
+                    multipartParserListener.onAudioData(audioData);
                 }
+                decodeListener = new IDecoder.IDecodeListener() {
+                    @Override
+                    public void onDecodeInfo(int sampleRate, int channels) {
+                        LogUtil.d(TAG, "Decoder-onDecodeInfo-sampleRate=" + sampleRate);
+                        LogUtil.d(TAG, "Decoder-onDecodeInfo-channels=" + channels);
+                        dcsStream.sampleRate = sampleRate;
+                        dcsStream.channels = channels;
+                    }
 
-                @Override
-                public void onDecodePcm(byte[] pcmData) {
-                    dcsStream.dataQueue.add(pcmData);
-                }
+                    @Override
+                    public void onDecodePcm(byte[] pcmData) {
+                        dcsStream.dataQueue.add(pcmData);
+                    }
 
-                @Override
-                public void onDecodeFinished() {
-                    dcsStream.isFin = true;
-                    decoder.removeOnDecodeListener(this);
-                }
-            };
-            decoder.addOnDecodeListener(decodeListener);
-            decoder.decode(new WrapInputStream(inputStream));
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.d(TAG, "Decoder-handleAudio Exception: ", e);
-            dcsStream.isFin = true;
-            if (decodeListener != null) {
-                decoder.removeOnDecodeListener(decodeListener);
+                    @Override
+                    public void onDecodeFinished() {
+                        dcsStream.isFin = true;
+                        decoder.removeOnDecodeListener(this);
+                    }
+                };
+                decoder.addOnDecodeListener(decodeListener);
+                decoder.decode(new WrapInputStream(inputStream));
+            } catch (Exception e) {
+                e.printStackTrace();
+                LogUtil.d(TAG, "Decoder-handleAudio Exception: ", e);
+                dcsStream.isFin = true;
+                if (decodeListener != null) {
+                    decoder.removeOnDecodeListener(decodeListener);
                 }
             }
         }

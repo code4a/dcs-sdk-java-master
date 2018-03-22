@@ -16,7 +16,6 @@
 package com.code4a.dueroslib.http;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.baidu.dcs.okhttp3.RequestBody;
 import com.code4a.dueroslib.framework.message.DcsRequestBody;
@@ -45,7 +44,7 @@ public class OkHttpRequestImpl implements HttpRequestInterface {
     @Override
     public void doPostEventStringAsync(DcsRequestBody requestBody, DcsCallback dcsCallback) {
         if (TextUtils.isEmpty(HttpConfig.getAccessToken())) {
-            Log.d(TAG, "doPostEventStringAsync-accessToken is null !");
+            LogUtil.d(TAG, "doPostEventStringAsync-accessToken is null !");
             return;
         }
         String bodyJson = ObjectMapperUtil.instance().objectToJson(requestBody);
@@ -66,11 +65,11 @@ public class OkHttpRequestImpl implements HttpRequestInterface {
                                           DcsStreamRequestBody streamRequestBody,
                                           DcsCallback dcsCallback) {
         if (TextUtils.isEmpty(HttpConfig.getAccessToken())) {
-            Log.d(TAG, "doPostEventMultipartAsync-accessToken is null !");
+            LogUtil.d(TAG, "doPostEventMultipartAsync-accessToken is null !");
             return;
         }
         String bodyJson = ObjectMapperUtil.instance().objectToJson(requestBody);
-        Log.d("time", "开始发语音 : " + bodyJson);
+        LogUtil.d(TAG, "doPostEventMultipartAsync time , 开始发语音 : " + bodyJson);
         Map<String, RequestBody> multiParts = new LinkedHashMap<>();
         multiParts.put(HttpConfig.Parameters.DATA_METADATA,
                 RequestBody.create(OkHttpMediaType.MEDIA_JSON_TYPE, bodyJson));
@@ -88,7 +87,7 @@ public class OkHttpRequestImpl implements HttpRequestInterface {
     public void doGetDirectivesAsync(DcsCallback dcsCallback) {
         LogUtil.d(TAG, "doGetDirectivesAsync");
         if (TextUtils.isEmpty(HttpConfig.getAccessToken())) {
-            Log.d(TAG, "doGetDirectivesAsync-accessToken is null !");
+            LogUtil.d(TAG, "doGetDirectivesAsync-accessToken is null !");
             return;
         }
         long time = 7 * 24 * 60 * 60 * 1000L;
@@ -106,7 +105,7 @@ public class OkHttpRequestImpl implements HttpRequestInterface {
     public void doGetPingAsync(DcsRequestBody requestBody, DcsCallback dcsCallback) {
         LogUtil.d(TAG, "doGetPingAsync");
         if (TextUtils.isEmpty(HttpConfig.getAccessToken())) {
-            Log.d(TAG, "doGetPingAsync-accessToken is null !");
+            LogUtil.d(TAG, "doGetPingAsync-accessToken is null !");
             return;
         }
         DcsHttpManager.get()

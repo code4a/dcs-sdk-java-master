@@ -39,7 +39,7 @@ public class WakeUpImpl implements IWakeUp {
     // 初始化唤醒词成功
     private static final int WAKEUP_INIT_SUCCEED = 0;
     // 唤醒词
-    private static final String WAKEUP_WORD = "小安";
+    private static final String WAKEUP_WORD = "小安管家";
     // 唤醒词声学模型模型文件
     private static final String WAKEUP_FILENAME = "libbdEasrS1MergeNormal.so";
     // jni
